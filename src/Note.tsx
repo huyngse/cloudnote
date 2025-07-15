@@ -70,7 +70,7 @@ const Note = ({
       const newWidth = startWidth + (moveEvent.pageX - startX);
       const newHeight = startHeight + (moveEvent.pageY - startY);
       onUpdate(id, {
-        width: Math.max(150, newWidth),
+        width: Math.max(60, newWidth),
         height: Math.max(60, newHeight),
       });
     };

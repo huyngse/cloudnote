@@ -2,6 +2,8 @@
 
 a whimsical sticky note board for saving little thoughts, doodles, and snapshots — right in your browser.
 
+![screenshot](https://cloudnote-beryl.vercel.app/og-preview.png)  
+
 ---
 
 ## ✨ features

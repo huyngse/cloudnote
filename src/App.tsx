@@ -23,6 +23,13 @@ const CloudNote = () => {
 
   useEffect(() => {
     const handlePasteShortcut = async (e: KeyboardEvent) => {
+      const active = document.activeElement;
+      const isEditing =
+        active?.tagName === "TEXTAREA" ||
+        active?.tagName === "INPUT" ||
+        (active as HTMLElement)?.isContentEditable;
+
+      if (isEditing) return;
       if ((e.ctrlKey || e.metaKey) && e.key === "v") {
         try {
           const clipboardItems = await navigator.clipboard.read();
@@ -40,7 +47,7 @@ const CloudNote = () => {
                     y: 100 + Math.random() * 300,
                     width: 250,
                     height: 250,
-                    content: reader.result as string, 
+                    content: reader.result as string,
                     color: getRandomColor(),
                     onUpdate: () => {},
                     onDelete: () => {},
