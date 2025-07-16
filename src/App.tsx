@@ -229,7 +229,7 @@ const CloudNote = () => {
       y: 100 + Math.random() * 300,
       width: partial.width ?? 200,
       height: partial.height ?? 150,
-      content: partial.content ?? "Type something...",
+      content: partial.content ?? "type something...",
       color: partial.color ?? getRandomColor(),
       rotation: partial.rotation ?? 0,
       zIndex: partial.zIndex ?? 1,
@@ -270,11 +270,11 @@ const CloudNote = () => {
     🌤️ welcome to cloudnote!
     
     here's how to use this magical little space:
-    — shift + drag: move around the canvas 🖱️
-    — shift + scroll: zoom in & out 🔍
-    — ctrl/cmd + v: paste text or images from clipboard 📋
-    — double-click a note: toggle decor mode 🌸
-    — drag & resize notes, rotate them with the top handle 🔄
+    - shift + drag: move around the canvas 🖱️
+    - shift + scroll: zoom in & out 🔍
+    - ctrl/cmd + v: paste text or images from clipboard 📋
+    - double-click a note: toggle decor mode 🌸
+    - drag & resize notes, rotate them with the top handle 🔄
     
     have fun and stay cozy ☁️💛
     `.trim();
