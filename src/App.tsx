@@ -1,5 +1,5 @@
 // App.tsx
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import Note, { type NoteProps } from "./components/Note.tsx";
 import {
@@ -7,8 +7,9 @@ import {
   getAllNotes,
   saveNote,
   type StoredNote,
-} from "./indexedDbUtils.ts";
+} from "./utils/indexedDbUtils.ts";
 import Toast from "./components/Toast.tsx";
+import { getCanvasCenter } from "./utils/canvasUtils.ts";
 
 type FullNote = NoteProps;
 
@@ -44,6 +45,7 @@ const getRandomColor = () =>
   `hsl(${Math.floor(Math.random() * 360)}, 70%, 80%)`;
 
 const lockDecorStorageKey = "cloudnote-lock-decor";
+const panZoomStorageKey = "cloudnote-pan-zoom";
 
 const autoSaveNotes = async (notes: StoredNote[]) => {
   try {
@@ -81,8 +83,29 @@ const CloudNote = () => {
   });
 
   // 🧭 pan/zoom
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [scale, setScale] = useState(1);
+  const [pan, setPan] = useState<{ x: number; y: number }>(() => {
+    const stored = localStorage.getItem(panZoomStorageKey);
+    if (stored) {
+      try {
+        return JSON.parse(stored).pan ?? { x: 0, y: 0 };
+      } catch {
+        return { x: 0, y: 0 };
+      }
+    }
+    return { x: 0, y: 0 };
+  });
+
+  const [scale, setScale] = useState(() => {
+    const stored = localStorage.getItem(panZoomStorageKey);
+    if (stored) {
+      try {
+        return JSON.parse(stored).scale ?? 1;
+      } catch {
+        return 1;
+      }
+    }
+    return 1;
+  });
 
   // 🧵 refs for panning logic (for smoother dragging!)
   const panRef = useRef({ x: 0, y: 0 });
@@ -100,6 +123,20 @@ const CloudNote = () => {
   useEffect(() => {
     panRef.current = pan;
   }, [pan]);
+
+  const getCenterPosition = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const { x: centerX, y: centerY } = getCanvasCenter(container, pan, scale);
+
+    const offsetX = (Math.random() - 1) * 40;
+    const offsetY = (Math.random() - 1) * 40;
+    return {
+      x: centerX + offsetX,
+      y: centerY + offsetY,
+    };
+  }, [pan, scale]);
 
   // fetch from indexeddb
   useEffect(() => {
@@ -119,6 +156,31 @@ const CloudNote = () => {
   useEffect(() => {
     localStorage.setItem(lockDecorStorageKey, JSON.stringify(lockDecor));
   }, [lockDecor]);
+
+  // 🌸 persist pan and zoom state to localStorage anytime it changes
+  useEffect(() => {
+    localStorage.setItem(panZoomStorageKey, JSON.stringify({ pan, scale }));
+  }, [pan, scale]);
+
+  // shared createNote helper
+  const createNote = (partial: Partial<FullNote>): FullNote => {
+    const pos = getCenterPosition();
+    const newNote: FullNote = {
+      x: pos?.x ?? 0,
+      y: pos?.y ?? 0,
+      id: uuidv4(),
+      width: partial.width ?? 200,
+      height: partial.height ?? 150,
+      content: partial.content ?? "type something...",
+      color: partial.color ?? getRandomColor(),
+      rotation: partial.rotation ?? 0,
+      zIndex: partial.zIndex ?? 1,
+      onUpdate: () => {},
+      onDelete: () => {},
+      ...partial, // override defaults if provided
+    };
+    return newNote;
+  };
 
   // 🌟 handle paste from clipboard (text or image)
   useEffect(() => {
@@ -143,8 +205,6 @@ const CloudNote = () => {
                 const reader = new FileReader();
                 reader.onload = () => {
                   const newNote = createNote({
-                    width: 250,
-                    height: 250,
                     content: reader.result as string,
                   });
                   setNotes((prev) => [...prev, newNote]);
@@ -171,7 +231,29 @@ const CloudNote = () => {
 
     window.addEventListener("keydown", handlePasteShortcut);
     return () => window.removeEventListener("keydown", handlePasteShortcut);
-  }, []);
+  }, [createNote]);
+
+  // 🌟 handle delete active note
+  useEffect(() => {
+    const handleDeleteKey = (e: KeyboardEvent) => {
+      const active = document.activeElement;
+      const isEditing =
+        active?.tagName === "TEXTAREA" ||
+        active?.tagName === "INPUT" ||
+        (active as HTMLElement)?.isContentEditable;
+  
+      if (isEditing) return; // don’t delete while typing, that would be spooky (⊙﹏⊙)
+  
+      if (activeNoteId && (e.key === "Backspace" || e.key === "Delete")) {
+        e.preventDefault(); // avoid browser weirdness
+        deleteNote(activeNoteId);
+        setActiveNoteId(null); // clear selection after delete!
+      }
+    };
+  
+    window.addEventListener("keydown", handleDeleteKey);
+    return () => window.removeEventListener("keydown", handleDeleteKey);
+  }, [activeNoteId]);
 
   // 🖱️ panning logic using shift + mouse drag
   useEffect(() => {
@@ -221,57 +303,38 @@ const CloudNote = () => {
       if (!e.shiftKey) return;
       e.preventDefault();
       setCursorMode("scaling");
-  
+
       const container = containerRef.current;
       if (!container) return;
-      
+
       const rect = container.getBoundingClientRect();
       const centerX = rect.width / 2;
       const centerY = rect.height / 2;
-  
+
       const { x: panX, y: panY } = panRef.current;
-  
+
       const canvasX = (centerX - panX) / scale;
       const canvasY = (centerY - panY) / scale;
-  
+
       let newScale = scale - e.deltaY * 0.001;
       newScale = Math.min(Math.max(newScale, 0.5), 2);
-  
+
       const newPanX = centerX - canvasX * newScale;
       const newPanY = centerY - canvasY * newScale;
-  
+
       setScale(newScale);
       setPan({ x: newPanX, y: newPanY });
-  
+
       clearTimeout((handleWheel as any)._timeout);
       (handleWheel as any)._timeout = setTimeout(() => {
         setCursorMode("default");
       }, 300);
     };
-  
+
     const container = containerRef.current;
     container?.addEventListener("wheel", handleWheel, { passive: false });
     return () => container?.removeEventListener("wheel", handleWheel);
-  }, [scale]); 
-
-  // shared createNote helper
-  const createNote = (partial: Partial<FullNote>): FullNote => {
-    const newNote: FullNote = {
-      id: uuidv4(),
-      x: 100 + Math.random() * 300,
-      y: 100 + Math.random() * 300,
-      width: partial.width ?? 200,
-      height: partial.height ?? 150,
-      content: partial.content ?? "type something...",
-      color: partial.color ?? getRandomColor(),
-      rotation: partial.rotation ?? 0,
-      zIndex: partial.zIndex ?? 1,
-      onUpdate: () => {},
-      onDelete: () => {},
-      ...partial, // override defaults if provided
-    };
-    return newNote;
-  };
+  }, [scale]);
 
   // ➕ add new blank note
   const addNote = () => {
@@ -287,8 +350,6 @@ const CloudNote = () => {
       const reader = new FileReader();
       reader.onload = () => {
         const newNote = createNote({
-          width: 250,
-          height: 250,
           content: reader.result as string,
         });
         setNotes((prev) => [...prev, newNote]);
@@ -313,8 +374,6 @@ const CloudNote = () => {
     `.trim();
 
     const newNote = createNote({
-      x: 100,
-      y: 100,
       width: 500,
       height: 300,
       content: guideContent,
@@ -425,7 +484,7 @@ const CloudNote = () => {
         }}
       >
         <div
-        className="duration-100"
+          className="duration-100"
           style={{
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
             transformOrigin: "top left",

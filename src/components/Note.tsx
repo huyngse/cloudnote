@@ -197,7 +197,9 @@ const Note = ({
   return (
     <div
       ref={noteRef}
-      className={`absolute touch-none ${decorMode ? "" : "note"}`}
+      className={`absolute touch-none ${decorMode ? "" : "note"} ${
+        lockDecor && decorMode ? "pointer-events-none" : ""
+      }`}
       style={{
         top: localPos.y,
         left: localPos.x,
