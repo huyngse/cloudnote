@@ -97,7 +97,9 @@ const Note = ({
 
     document.addEventListener("mousemove", handleMove as any);
     document.addEventListener("mouseup", handleEnd);
-    document.addEventListener("touchmove", handleMove as any, { passive: false });
+    document.addEventListener("touchmove", handleMove as any, {
+      passive: false,
+    });
     document.addEventListener("touchend", handleEnd);
   };
 
@@ -130,7 +132,9 @@ const Note = ({
 
     document.addEventListener("mousemove", handleMove as any);
     document.addEventListener("mouseup", handleEnd);
-    document.addEventListener("touchmove", handleMove as any, { passive: false });
+    document.addEventListener("touchmove", handleMove as any, {
+      passive: false,
+    });
     document.addEventListener("touchend", handleEnd);
   };
 
@@ -145,14 +149,16 @@ const Note = ({
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
 
-    const initialAngle = Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI);
+    const initialAngle =
+      Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI);
     const startRotation = localRotation.rotation;
 
     const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
       const { clientX: moveX, clientY: moveY } =
         "touches" in moveEvent ? moveEvent.touches[0] : moveEvent;
 
-      const currentAngle = Math.atan2(moveY - centerY, moveX - centerX) * (180 / Math.PI);
+      const currentAngle =
+        Math.atan2(moveY - centerY, moveX - centerX) * (180 / Math.PI);
       const angleDiff = currentAngle - initialAngle;
       const newRotation = startRotation + angleDiff;
 
@@ -174,7 +180,9 @@ const Note = ({
 
     document.addEventListener("mousemove", handleMove as any);
     document.addEventListener("mouseup", handleEnd);
-    document.addEventListener("touchmove", handleMove as any, { passive: false });
+    document.addEventListener("touchmove", handleMove as any, {
+      passive: false,
+    });
     document.addEventListener("touchend", handleEnd);
   };
 
@@ -196,10 +204,22 @@ const Note = ({
     >
       {isActive && !decorMode && (
         <div className="absolute -top-8 right-0 flex gap-2 z-10 select-none">
-          <NoteControl title="rotate me ♻️" onMouseDown={handleRotateStart}>
+          <NoteControl
+            title="rotate me ♻️"
+            onMouseDown={handleRotateStart}
+            onDoubleClick={() => {
+              const resetRotation = { rotation: 0 };
+              rotateRef.current = resetRotation;
+              setLocalRotation(resetRotation);
+              onUpdate(id, resetRotation);
+            }}
+          >
             ♻️
           </NoteControl>
-          <NoteControl title="decorate 🌿" onClick={() => onUpdate(id, { decorMode: true })}>
+          <NoteControl
+            title="decorate 🌿"
+            onClick={() => onUpdate(id, { decorMode: true })}
+          >
             🌿
           </NoteControl>
           <NoteControl title="delete ✖️" onClick={() => onDelete(id)}>
@@ -235,7 +255,9 @@ const Note = ({
             src={content}
             alt="clipboard"
             className="w-full h-[calc(100%-2rem)] object-contain"
-            onDoubleClick={decorMode && !lockDecor ? handleDoubleClick : undefined}
+            onDoubleClick={
+              decorMode && !lockDecor ? handleDoubleClick : undefined
+            }
           />
         ) : (
           <textarea
@@ -244,7 +266,9 @@ const Note = ({
             className="w-full h-[calc(100%-2rem)] resize-none bg-transparent focus:outline-none p-2"
             value={content}
             onChange={(e) => onUpdate(id, { content: e.target.value })}
-            onDoubleClick={decorMode && !lockDecor ? handleDoubleClick : undefined}
+            onDoubleClick={
+              decorMode && !lockDecor ? handleDoubleClick : undefined
+            }
           />
         )}
 
