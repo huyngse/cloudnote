@@ -1,3 +1,4 @@
+// Note.tsx
 import React, { useEffect, useRef, useState } from "react";
 
 export type NoteProps = {
@@ -14,8 +15,8 @@ export type NoteProps = {
   isActive?: boolean;
   lockDecor?: boolean;
   onActivate?: (id: string) => void;
-  onUpdate: (id: string, updates: Partial<NoteProps>) => void;
-  onDelete: (id: string) => void;
+  onUpdate?: (id: string, updates: Partial<NoteProps>) => void;
+  onDelete?: (id: string) => void;
 };
 
 const Note = ({
@@ -39,6 +40,7 @@ const Note = ({
   const dragPos = useRef({ x, y });
   const resizeRef = useRef({ width, height });
   const rotateRef = useRef({ rotation });
+
   const [localPos, setLocalPos] = useState({ x, y });
   const [localSize, setLocalSize] = useState({ width, height });
   const [localRotation, setLocalRotation] = useState({ rotation });
@@ -58,132 +60,122 @@ const Note = ({
     setLocalRotation({ rotation });
   }, [rotation]);
 
+  const getClientCoords = (
+    e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent
+  ) => {
+    if ("touches" in e) {
+      return { x: e.touches[0].pageX, y: e.touches[0].pageY };
+    }
+    return { x: e.pageX, y: e.pageY };
+  };
+
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
+    const start = getClientCoords(e);
+    const offsetX = start.x - dragPos.current.x;
+    const offsetY = start.y - dragPos.current.y;
 
-    const startX = "touches" in e ? e.touches[0].pageX : e.pageX;
-    const startY = "touches" in e ? e.touches[0].pageY : e.pageY;
-    const offsetX = startX - dragPos.current.x;
-    const offsetY = startY - dragPos.current.y;
-
-    const onMove = (moveEvent: MouseEvent | TouchEvent) => {
-      const moveX =
-        "touches" in moveEvent ? moveEvent.touches[0].pageX : moveEvent.pageX;
-      const moveY =
-        "touches" in moveEvent ? moveEvent.touches[0].pageY : moveEvent.pageY;
-
-      const newX = moveX - offsetX;
-      const newY = moveY - offsetY;
-
+    const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
+      const move = getClientCoords(moveEvent);
+      const newX = move.x - offsetX;
+      const newY = move.y - offsetY;
       dragPos.current = { x: newX, y: newY };
-      setLocalPos({ x: newX, y: newY }); // Only update local state
+      setLocalPos(dragPos.current);
     };
 
-    const onEnd = () => {
-      onUpdate(id, { x: dragPos.current.x, y: dragPos.current.y }); // Commit to state
-      document.removeEventListener("mousemove", onMove as any);
-      document.removeEventListener("mouseup", onEnd);
-      document.removeEventListener("touchmove", onMove as any);
-      document.removeEventListener("touchend", onEnd);
+    const handleEnd = () => {
+      onUpdate(id, dragPos.current);
+      cleanup();
     };
 
-    document.addEventListener("mousemove", onMove as any);
-    document.addEventListener("mouseup", onEnd);
-    document.addEventListener("touchmove", onMove as any, { passive: false });
-    document.addEventListener("touchend", onEnd);
+    const cleanup = () => {
+      document.removeEventListener("mousemove", handleMove as any);
+      document.removeEventListener("mouseup", handleEnd);
+      document.removeEventListener("touchmove", handleMove as any);
+      document.removeEventListener("touchend", handleEnd);
+    };
+
+    document.addEventListener("mousemove", handleMove as any);
+    document.addEventListener("mouseup", handleEnd);
+    document.addEventListener("touchmove", handleMove as any, { passive: false });
+    document.addEventListener("touchend", handleEnd);
   };
 
   const handleResizeStart = (e: React.MouseEvent | React.TouchEvent) => {
-    e.stopPropagation();
     e.preventDefault();
+    e.stopPropagation();
 
-    const startX = "touches" in e ? e.touches[0].pageX : e.pageX;
-    const startY = "touches" in e ? e.touches[0].pageY : e.pageY;
-    const startWidth = width;
-    const startHeight = height;
+    const start = getClientCoords(e);
+    const { width: startWidth, height: startHeight } = localSize;
 
-    const onMove = (moveEvent: MouseEvent | TouchEvent) => {
-      const moveX =
-        "touches" in moveEvent ? moveEvent.touches[0].pageX : moveEvent.pageX;
-      const moveY =
-        "touches" in moveEvent ? moveEvent.touches[0].pageY : moveEvent.pageY;
-
-      const newWidth = startWidth + (moveX - startX);
-      const newHeight = startHeight + (moveY - startY);
-
+    const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
+      const move = getClientCoords(moveEvent);
+      const newWidth = startWidth + (move.x - start.x);
+      const newHeight = startHeight + (move.y - start.y);
       resizeRef.current = { width: newWidth, height: newHeight };
-      setLocalSize({ width: newWidth, height: newHeight });
+      setLocalSize(resizeRef.current);
     };
 
-    const onEnd = () => {
-      onUpdate(id, {
-        width: resizeRef.current.width,
-        height: resizeRef.current.height,
-      });
-      document.removeEventListener("mousemove", onMove as any);
-      document.removeEventListener("mouseup", onEnd);
-      document.removeEventListener("touchmove", onMove as any);
-      document.removeEventListener("touchend", onEnd);
+    const handleEnd = () => {
+      onUpdate(id, resizeRef.current);
+      cleanup();
     };
 
-    document.addEventListener("mousemove", onMove as any);
-    document.addEventListener("mouseup", onEnd);
-    document.addEventListener("touchmove", onMove as any, { passive: false });
-    document.addEventListener("touchend", onEnd);
+    const cleanup = () => {
+      document.removeEventListener("mousemove", handleMove as any);
+      document.removeEventListener("mouseup", handleEnd);
+      document.removeEventListener("touchmove", handleMove as any);
+      document.removeEventListener("touchend", handleEnd);
+    };
+
+    document.addEventListener("mousemove", handleMove as any);
+    document.addEventListener("mouseup", handleEnd);
+    document.addEventListener("touchmove", handleMove as any, { passive: false });
+    document.addEventListener("touchend", handleEnd);
   };
 
   const handleRotateStart = (e: React.MouseEvent | React.TouchEvent) => {
-    e.stopPropagation();
     e.preventDefault();
+    e.stopPropagation();
 
-    const noteElement = noteRef.current;
-    if (!noteElement) return;
+    const rect = noteRef.current?.getBoundingClientRect();
+    if (!rect) return;
 
-    const rect = noteElement.getBoundingClientRect();
+    const { clientX, clientY } = "touches" in e ? e.touches[0] : e;
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
 
-    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    const initialAngle = Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI);
+    const startRotation = localRotation.rotation;
 
-    const initialDx = clientX - centerX;
-    const initialDy = clientY - centerY;
-    const initialAngle = Math.atan2(initialDy, initialDx) * (180 / Math.PI);
-    const startRotation = rotation || 0;
+    const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
+      const { clientX: moveX, clientY: moveY } =
+        "touches" in moveEvent ? moveEvent.touches[0] : moveEvent;
 
-    const onMove = (moveEvent: MouseEvent | TouchEvent) => {
-      const moveX =
-        "touches" in moveEvent
-          ? moveEvent.touches[0].clientX
-          : moveEvent.clientX;
-      const moveY =
-        "touches" in moveEvent
-          ? moveEvent.touches[0].clientY
-          : moveEvent.clientY;
-
-      const dx = moveX - centerX;
-      const dy = moveY - centerY;
-      const currentAngle = Math.atan2(dy, dx) * (180 / Math.PI);
-
+      const currentAngle = Math.atan2(moveY - centerY, moveX - centerX) * (180 / Math.PI);
       const angleDiff = currentAngle - initialAngle;
       const newRotation = startRotation + angleDiff;
 
       rotateRef.current = { rotation: newRotation };
-      setLocalRotation({ rotation: newRotation });
+      setLocalRotation(rotateRef.current);
     };
 
-    const onEnd = () => {
-      onUpdate(id, { rotation: rotateRef.current.rotation });
-      document.removeEventListener("mousemove", onMove as any);
-      document.removeEventListener("mouseup", onEnd);
-      document.removeEventListener("touchmove", onMove as any);
-      document.removeEventListener("touchend", onEnd);
+    const handleEnd = () => {
+      onUpdate(id, rotateRef.current);
+      cleanup();
     };
 
-    document.addEventListener("mousemove", onMove as any);
-    document.addEventListener("mouseup", onEnd);
-    document.addEventListener("touchmove", onMove as any, { passive: false });
-    document.addEventListener("touchend", onEnd);
+    const cleanup = () => {
+      document.removeEventListener("mousemove", handleMove as any);
+      document.removeEventListener("mouseup", handleEnd);
+      document.removeEventListener("touchmove", handleMove as any);
+      document.removeEventListener("touchend", handleEnd);
+    };
+
+    document.addEventListener("mousemove", handleMove as any);
+    document.addEventListener("mouseup", handleEnd);
+    document.addEventListener("touchmove", handleMove as any, { passive: false });
+    document.addEventListener("touchend", handleEnd);
   };
 
   const handleDoubleClick = () => {
@@ -197,49 +189,33 @@ const Note = ({
       style={{
         top: localPos.y,
         left: localPos.x,
-        transform: `rotate(${localRotation.rotation ?? 0}deg)`,
+        transform: `rotate(${localRotation.rotation}deg)`,
         transformOrigin: "center center",
-        zIndex: zIndex ?? 1,
+        zIndex,
       }}
     >
       {isActive && !decorMode && (
         <div className="absolute -top-8 right-0 flex gap-2 z-10 select-none">
-          <button
-            onMouseDown={(e) => handleRotateStart(e)}
-            onTouchStart={(e) => handleRotateStart(e)}
-            className="bg-white shadow rounded-full p-1 text-sm hover:bg-gray-100 cursor-pointer duration-300"
-            title="rotate me ♻️"
-          >
+          <NoteControl title="rotate me ♻️" onMouseDown={handleRotateStart}>
             ♻️
-          </button>
-          <button
-            onClick={() => onUpdate(id, { decorMode: true })}
-            className="bg-white shadow rounded-full p-1 text-sm hover:bg-gray-100 cursor-pointer duration-300"
-            title="decorate 🌿"
-          >
+          </NoteControl>
+          <NoteControl title="decorate 🌿" onClick={() => onUpdate(id, { decorMode: true })}>
             🌿
-          </button>
-          <button
-            onClick={() => onDelete(id)}
-            className="bg-white shadow rounded-full p-1 text-sm hover:bg-gray-100 cursor-pointer duration-300"
-            title="delete ✖️"
-          >
+          </NoteControl>
+          <NoteControl title="delete ✖️" onClick={() => onDelete(id)}>
             ✖️
-          </button>
+          </NoteControl>
         </div>
       )}
+
       <div
-        className={` rounded overflow-hidden ${decorMode ? "" : "shadow-xl"}`}
+        className={`rounded overflow-hidden ${decorMode ? "" : "shadow-xl"}`}
         style={{
           width: localSize.width,
           height: localSize.height,
           backgroundColor: decorMode ? "transparent" : color,
         }}
-        onMouseDown={() => {
-          if (!decorMode) {
-            onActivate?.(id);
-          }
-        }}
+        onMouseDown={() => !decorMode && onActivate?.(id)}
       >
         {decorMode ? (
           <div className="opacity-0 select-none py-1">Invisible</div>
@@ -248,7 +224,7 @@ const Note = ({
             className="py-1 bg-black/20 text-sm text-black select-none cursor-grab active:cursor-grabbing font-semibold text-right px-2 w-full"
             onMouseDown={handleDragStart}
             onTouchStart={handleDragStart}
-            title="Drag me 🖐️"
+            title="drag me 🖐️"
           >
             ⋮⋮
           </button>
@@ -259,9 +235,7 @@ const Note = ({
             src={content}
             alt="clipboard"
             className="w-full h-[calc(100%-2rem)] object-contain"
-            onDoubleClick={
-              decorMode && !lockDecor ? handleDoubleClick : undefined
-            }
+            onDoubleClick={decorMode && !lockDecor ? handleDoubleClick : undefined}
           />
         ) : (
           <textarea
@@ -270,23 +244,32 @@ const Note = ({
             className="w-full h-[calc(100%-2rem)] resize-none bg-transparent focus:outline-none p-2"
             value={content}
             onChange={(e) => onUpdate(id, { content: e.target.value })}
-            onDoubleClick={
-              decorMode && !lockDecor ? handleDoubleClick : undefined
-            }
+            onDoubleClick={decorMode && !lockDecor ? handleDoubleClick : undefined}
           />
         )}
 
-        {/* Resize handle */}
         {!decorMode && (
           <div
             onMouseDown={handleResizeStart}
             onTouchStart={handleResizeStart}
             className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize bg-black/10"
-          ></div>
+          />
         )}
       </div>
     </div>
   );
 };
+
+const NoteControl = ({
+  children,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+  <button
+    {...props}
+    className="bg-white shadow rounded-full p-1 text-sm hover:bg-gray-100 cursor-pointer duration-300"
+  >
+    {children}
+  </button>
+);
 
 export default React.memo(Note);
