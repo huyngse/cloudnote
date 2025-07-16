@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 export type NoteProps = {
   id: string;
@@ -36,14 +36,35 @@ const Note = ({
   onActivate = () => {},
 }: NoteProps) => {
   const noteRef = useRef<HTMLDivElement>(null);
+  const dragPos = useRef({ x, y });
+  const resizeRef = useRef({ width, height });
+  const rotateRef = useRef({ rotation });
+  const [localPos, setLocalPos] = useState({ x, y });
+  const [localSize, setLocalSize] = useState({ width, height });
+  const [localRotation, setLocalRotation] = useState({ rotation });
+
+  useEffect(() => {
+    dragPos.current = { x, y };
+    setLocalPos({ x, y });
+  }, [x, y]);
+
+  useEffect(() => {
+    resizeRef.current = { width, height };
+    setLocalSize({ width, height });
+  }, [width, height]);
+
+  useEffect(() => {
+    rotateRef.current = { rotation };
+    setLocalRotation({ rotation });
+  }, [rotation]);
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
 
-    const pageX = "touches" in e ? e.touches[0].pageX : e.pageX;
-    const pageY = "touches" in e ? e.touches[0].pageY : e.pageY;
-    const offsetX = pageX - x;
-    const offsetY = pageY - y;
+    const startX = "touches" in e ? e.touches[0].pageX : e.pageX;
+    const startY = "touches" in e ? e.touches[0].pageY : e.pageY;
+    const offsetX = startX - dragPos.current.x;
+    const offsetY = startY - dragPos.current.y;
 
     const onMove = (moveEvent: MouseEvent | TouchEvent) => {
       const moveX =
@@ -51,13 +72,15 @@ const Note = ({
       const moveY =
         "touches" in moveEvent ? moveEvent.touches[0].pageY : moveEvent.pageY;
 
-      onUpdate(id, {
-        x: moveX - offsetX,
-        y: moveY - offsetY,
-      });
+      const newX = moveX - offsetX;
+      const newY = moveY - offsetY;
+
+      dragPos.current = { x: newX, y: newY };
+      setLocalPos({ x: newX, y: newY }); // Only update local state
     };
 
     const onEnd = () => {
+      onUpdate(id, { x: dragPos.current.x, y: dragPos.current.y }); // Commit to state
       document.removeEventListener("mousemove", onMove as any);
       document.removeEventListener("mouseup", onEnd);
       document.removeEventListener("touchmove", onMove as any);
@@ -88,13 +111,15 @@ const Note = ({
       const newWidth = startWidth + (moveX - startX);
       const newHeight = startHeight + (moveY - startY);
 
-      onUpdate(id, {
-        width: Math.max(60, newWidth),
-        height: Math.max(60, newHeight),
-      });
+      resizeRef.current = { width: newWidth, height: newHeight };
+      setLocalSize({ width: newWidth, height: newHeight });
     };
 
     const onEnd = () => {
+      onUpdate(id, {
+        width: resizeRef.current.width,
+        height: resizeRef.current.height,
+      });
       document.removeEventListener("mousemove", onMove as any);
       document.removeEventListener("mouseup", onEnd);
       document.removeEventListener("touchmove", onMove as any);
@@ -143,10 +168,12 @@ const Note = ({
       const angleDiff = currentAngle - initialAngle;
       const newRotation = startRotation + angleDiff;
 
-      onUpdate(id, { rotation: newRotation });
+      rotateRef.current = { rotation: newRotation };
+      setLocalRotation({ rotation: newRotation });
     };
 
     const onEnd = () => {
+      onUpdate(id, { rotation: rotateRef.current.rotation });
       document.removeEventListener("mousemove", onMove as any);
       document.removeEventListener("mouseup", onEnd);
       document.removeEventListener("touchmove", onMove as any);
@@ -168,9 +195,9 @@ const Note = ({
       ref={noteRef}
       className="absolute note"
       style={{
-        top: y,
-        left: x,
-        transform: `rotate(${rotation ?? 0}deg)`,
+        top: localPos.y,
+        left: localPos.x,
+        transform: `rotate(${localRotation.rotation ?? 0}deg)`,
         transformOrigin: "center center",
         zIndex: zIndex ?? 1,
       }}
@@ -204,8 +231,8 @@ const Note = ({
       <div
         className={` rounded overflow-hidden ${decorMode ? "" : "shadow-xl"}`}
         style={{
-          width,
-          height,
+          width: localSize.width,
+          height: localSize.height,
           backgroundColor: decorMode ? "transparent" : color,
         }}
         onMouseDown={() => {
@@ -262,4 +289,4 @@ const Note = ({
   );
 };
 
-export default Note;
+export default React.memo(Note);
