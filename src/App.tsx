@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import Note, { type NoteProps } from "./Note.tsx";
 
@@ -16,6 +16,7 @@ const CloudNote = () => {
   });
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
   const [lockDecor, setLockDecor] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     localStorage.setItem(localStorageKey, JSON.stringify(notes));
@@ -102,6 +103,28 @@ const CloudNote = () => {
     setNotes([...notes, newNote]);
   };
 
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const newNote: FullNote = {
+          id: uuidv4(),
+          x: 100 + Math.random() * 300,
+          y: 100 + Math.random() * 300,
+          width: 250,
+          height: 250,
+          content: reader.result as string,
+          color: getRandomColor(),
+          onUpdate: () => {},
+          onDelete: () => {},
+        };
+        setNotes((prev) => [...prev, newNote]);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const updateNote = (id: string, updates: Partial<FullNote>) => {
     setNotes((prev) =>
       prev.map((note) => (note.id === id ? { ...note, ...updates } : note))
@@ -115,12 +138,26 @@ const CloudNote = () => {
   return (
     <div className="w-full h-screen relative bg-slate-100 overflow-auto">
       <div className="flex justify-end bottom-0 gap-3 fixed w-full z-[1000] p-3">
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          onChange={handleImageUpload}
+          style={{ display: "none" }}
+        />
         <button
           onClick={addNote}
           className="bg-white shadow rounded-full p-2 text-sm hover:bg-gray-100 cursor-pointer duration-300"
           title="➕ Add Note"
         >
           ➕
+        </button>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="bg-white shadow rounded-full p-2 text-sm hover:bg-gray-100 cursor-pointer duration-300"
+          title="🖼️ Add Image Note"
+        >
+          🖼️
         </button>
         <button
           onClick={() => setLockDecor((prev) => !prev)}
