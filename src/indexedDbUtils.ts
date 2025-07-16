@@ -11,6 +11,7 @@ export type StoredNote = {
     height: number;
     color: string;
     rotation?: number;
+    decorMode?: boolean,
     zIndex?: number;
 };
 

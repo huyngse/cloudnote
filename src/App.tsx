@@ -13,8 +13,30 @@ import Toast from "./components/Toast.tsx";
 type FullNote = NoteProps;
 
 function toStoredNote(note: FullNote): StoredNote {
-  const { id, content, x, y, width, height, color, rotation, zIndex } = note;
-  return { id, content, x, y, width, height, color, rotation, zIndex };
+  const {
+    id,
+    content,
+    x,
+    y,
+    width,
+    height,
+    color,
+    rotation,
+    zIndex,
+    decorMode,
+  } = note;
+  return {
+    id,
+    content,
+    x,
+    y,
+    width,
+    height,
+    color,
+    rotation,
+    zIndex,
+    decorMode,
+  };
 }
 
 // utility: generate a soft pastel color with random hue
@@ -197,29 +219,40 @@ const CloudNote = () => {
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
       if (!e.shiftKey) return;
-
       e.preventDefault();
-
       setCursorMode("scaling");
-
+  
+      const container = containerRef.current;
+      if (!container) return;
+      
+      const rect = container.getBoundingClientRect();
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+  
+      const { x: panX, y: panY } = panRef.current;
+  
+      const canvasX = (centerX - panX) / scale;
+      const canvasY = (centerY - panY) / scale;
+  
       let newScale = scale - e.deltaY * 0.001;
       newScale = Math.min(Math.max(newScale, 0.5), 2);
-
+  
+      const newPanX = centerX - canvasX * newScale;
+      const newPanY = centerY - canvasY * newScale;
+  
       setScale(newScale);
-
+      setPan({ x: newPanX, y: newPanY });
+  
       clearTimeout((handleWheel as any)._timeout);
       (handleWheel as any)._timeout = setTimeout(() => {
         setCursorMode("default");
       }, 300);
     };
-
+  
     const container = containerRef.current;
     container?.addEventListener("wheel", handleWheel, { passive: false });
-
-    return () => {
-      container?.removeEventListener("wheel", handleWheel);
-    };
-  }, [scale]);
+    return () => container?.removeEventListener("wheel", handleWheel);
+  }, [scale]); 
 
   // shared createNote helper
   const createNote = (partial: Partial<FullNote>): FullNote => {
@@ -270,11 +303,11 @@ const CloudNote = () => {
     🌤️ welcome to cloudnote!
     
     here's how to use this magical little space:
-    - shift + drag: move around the canvas 🖱️
-    - shift + scroll: zoom in & out 🔍
-    - ctrl/cmd + v: paste text or images from clipboard 📋
-    - double-click a note: toggle decor mode 🌸
-    - drag & resize notes, rotate them with the top handle 🔄
+    • shift + drag: move around the canvas 🖱️
+    • shift + scroll: zoom in & out 🔍
+    • ctrl/cmd + v: paste text or images from clipboard 📋
+    • double-click a note: toggle decor mode 🌸
+    • drag & resize notes, rotate them with the top handle 🔄
     
     have fun and stay cozy ☁️💛
     `.trim();
@@ -392,6 +425,7 @@ const CloudNote = () => {
         }}
       >
         <div
+        className="duration-100"
           style={{
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
             transformOrigin: "top left",
@@ -412,6 +446,7 @@ const CloudNote = () => {
               onActivate={setActiveNoteId}
               lockDecor={lockDecor}
               onZIndexChange={moveNoteZIndex}
+              scale={scale}
             />
           ))}
         </div>

@@ -14,6 +14,7 @@ export type NoteProps = {
   decorMode?: boolean;
   isActive?: boolean;
   lockDecor?: boolean;
+  scale?: number;
   onActivate?: (id: string) => void;
   onUpdate?: (id: string, updates: Partial<NoteProps>) => void;
   onDelete?: (id: string) => void;
@@ -33,6 +34,7 @@ const Note = ({
   decorMode = false,
   isActive = false,
   lockDecor = false,
+  scale = 1,
   onUpdate = () => {},
   onDelete = () => {},
   onActivate = () => {},
@@ -74,13 +76,13 @@ const Note = ({
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     const start = getClientCoords(e);
-    const offsetX = start.x - dragPos.current.x;
-    const offsetY = start.y - dragPos.current.y;
+    const offsetX = start.x - dragPos.current.x * scale;
+    const offsetY = start.y - dragPos.current.y * scale;
 
     const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
       const move = getClientCoords(moveEvent);
-      const newX = move.x - offsetX;
-      const newY = move.y - offsetY;
+      const newX = (move.x - offsetX) / scale;
+      const newY = (move.y - offsetY) / scale;
       dragPos.current = { x: newX, y: newY };
       setLocalPos(dragPos.current);
     };
@@ -114,8 +116,8 @@ const Note = ({
 
     const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
       const move = getClientCoords(moveEvent);
-      const newWidth = startWidth + (move.x - start.x);
-      const newHeight = startHeight + (move.y - start.y);
+      const newWidth = startWidth + (move.x - start.x) / scale;
+      const newHeight = startHeight + (move.y - start.y) / scale;
       resizeRef.current = { width: newWidth, height: newHeight };
       setLocalSize(resizeRef.current);
     };
