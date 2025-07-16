@@ -37,55 +37,79 @@ const Note = ({
 }: NoteProps) => {
   const noteRef = useRef<HTMLDivElement>(null);
 
-  const handleDrag = (e: React.MouseEvent) => {
-    const startX = e.pageX;
-    const startY = e.pageY;
-    const offsetX = startX - x;
-    const offsetY = startY - y;
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
 
-    const onMouseMove = (moveEvent: MouseEvent) => {
+    const pageX = "touches" in e ? e.touches[0].pageX : e.pageX;
+    const pageY = "touches" in e ? e.touches[0].pageY : e.pageY;
+    const offsetX = pageX - x;
+    const offsetY = pageY - y;
+
+    const onMove = (moveEvent: MouseEvent | TouchEvent) => {
+      const moveX =
+        "touches" in moveEvent ? moveEvent.touches[0].pageX : moveEvent.pageX;
+      const moveY =
+        "touches" in moveEvent ? moveEvent.touches[0].pageY : moveEvent.pageY;
+
       onUpdate(id, {
-        x: moveEvent.pageX - offsetX,
-        y: moveEvent.pageY - offsetY,
+        x: moveX - offsetX,
+        y: moveY - offsetY,
       });
     };
 
-    const onMouseUp = () => {
-      document.removeEventListener("mousemove", onMouseMove);
-      document.removeEventListener("mouseup", onMouseUp);
+    const onEnd = () => {
+      document.removeEventListener("mousemove", onMove as any);
+      document.removeEventListener("mouseup", onEnd);
+      document.removeEventListener("touchmove", onMove as any);
+      document.removeEventListener("touchend", onEnd);
     };
 
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
+    document.addEventListener("mousemove", onMove as any);
+    document.addEventListener("mouseup", onEnd);
+    document.addEventListener("touchmove", onMove as any, { passive: false });
+    document.addEventListener("touchend", onEnd);
   };
 
-  const handleResize = (e: React.MouseEvent) => {
+  const handleResizeStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
-    const startX = e.pageX;
-    const startY = e.pageY;
+    e.preventDefault();
+
+    const startX = "touches" in e ? e.touches[0].pageX : e.pageX;
+    const startY = "touches" in e ? e.touches[0].pageY : e.pageY;
     const startWidth = width;
     const startHeight = height;
 
-    const onMouseMove = (moveEvent: MouseEvent) => {
-      const newWidth = startWidth + (moveEvent.pageX - startX);
-      const newHeight = startHeight + (moveEvent.pageY - startY);
+    const onMove = (moveEvent: MouseEvent | TouchEvent) => {
+      const moveX =
+        "touches" in moveEvent ? moveEvent.touches[0].pageX : moveEvent.pageX;
+      const moveY =
+        "touches" in moveEvent ? moveEvent.touches[0].pageY : moveEvent.pageY;
+
+      const newWidth = startWidth + (moveX - startX);
+      const newHeight = startHeight + (moveY - startY);
+
       onUpdate(id, {
         width: Math.max(60, newWidth),
         height: Math.max(60, newHeight),
       });
     };
 
-    const onMouseUp = () => {
-      document.removeEventListener("mousemove", onMouseMove);
-      document.removeEventListener("mouseup", onMouseUp);
+    const onEnd = () => {
+      document.removeEventListener("mousemove", onMove as any);
+      document.removeEventListener("mouseup", onEnd);
+      document.removeEventListener("touchmove", onMove as any);
+      document.removeEventListener("touchend", onEnd);
     };
 
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
+    document.addEventListener("mousemove", onMove as any);
+    document.addEventListener("mouseup", onEnd);
+    document.addEventListener("touchmove", onMove as any, { passive: false });
+    document.addEventListener("touchend", onEnd);
   };
 
-  const handleRotate = (e: React.MouseEvent) => {
+  const handleRotateStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
+    e.preventDefault();
 
     const noteElement = noteRef.current;
     if (!noteElement) return;
@@ -94,14 +118,26 @@ const Note = ({
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
 
-    const initialDx = e.clientX - centerX;
-    const initialDy = e.clientY - centerY;
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+
+    const initialDx = clientX - centerX;
+    const initialDy = clientY - centerY;
     const initialAngle = Math.atan2(initialDy, initialDx) * (180 / Math.PI);
     const startRotation = rotation || 0;
 
-    const onMouseMove = (moveEvent: MouseEvent) => {
-      const dx = moveEvent.clientX - centerX;
-      const dy = moveEvent.clientY - centerY;
+    const onMove = (moveEvent: MouseEvent | TouchEvent) => {
+      const moveX =
+        "touches" in moveEvent
+          ? moveEvent.touches[0].clientX
+          : moveEvent.clientX;
+      const moveY =
+        "touches" in moveEvent
+          ? moveEvent.touches[0].clientY
+          : moveEvent.clientY;
+
+      const dx = moveX - centerX;
+      const dy = moveY - centerY;
       const currentAngle = Math.atan2(dy, dx) * (180 / Math.PI);
 
       const angleDiff = currentAngle - initialAngle;
@@ -110,13 +146,17 @@ const Note = ({
       onUpdate(id, { rotation: newRotation });
     };
 
-    const onMouseUp = () => {
-      document.removeEventListener("mousemove", onMouseMove);
-      document.removeEventListener("mouseup", onMouseUp);
+    const onEnd = () => {
+      document.removeEventListener("mousemove", onMove as any);
+      document.removeEventListener("mouseup", onEnd);
+      document.removeEventListener("touchmove", onMove as any);
+      document.removeEventListener("touchend", onEnd);
     };
 
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
+    document.addEventListener("mousemove", onMove as any);
+    document.addEventListener("mouseup", onEnd);
+    document.addEventListener("touchmove", onMove as any, { passive: false });
+    document.addEventListener("touchend", onEnd);
   };
 
   const handleDoubleClick = () => {
@@ -138,7 +178,8 @@ const Note = ({
       {isActive && !decorMode && (
         <div className="absolute -top-8 right-0 flex gap-2 z-10 select-none">
           <button
-            onMouseDown={(e) => handleRotate(e)}
+            onMouseDown={(e) => handleRotateStart(e)}
+            onTouchStart={(e) => handleRotateStart(e)}
             className="bg-white shadow rounded-full p-1 text-sm hover:bg-gray-100 cursor-pointer duration-300"
             title="rotate me ♻️"
           >
@@ -178,7 +219,8 @@ const Note = ({
         ) : (
           <button
             className="py-1 bg-black/20 text-sm text-black select-none cursor-grab active:cursor-grabbing font-semibold text-right px-2 w-full"
-            onMouseDown={handleDrag}
+            onMouseDown={handleDragStart}
+            onTouchStart={handleDragStart}
             title="Drag me 🖐️"
           >
             ⋮⋮
@@ -210,7 +252,8 @@ const Note = ({
         {/* Resize handle */}
         {!decorMode && (
           <div
-            onMouseDown={handleResize}
+            onMouseDown={handleResizeStart}
+            onTouchStart={handleResizeStart}
             className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize bg-black/10"
           ></div>
         )}
