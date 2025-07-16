@@ -298,7 +298,7 @@ const CloudNote = () => {
       prev.map((note) => {
         if (note.id === id) {
           const updated = { ...note, ...updates };
-          saveNote(updated);
+          saveNote(toStoredNote(updated));
           return updated;
         }
         return note;
