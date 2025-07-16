@@ -1,4 +1,4 @@
-// Note.tsx
+// components/Note.tsx
 import React, { useEffect, useRef, useState } from "react";
 
 export type NoteProps = {
@@ -17,6 +17,7 @@ export type NoteProps = {
   onActivate?: (id: string) => void;
   onUpdate?: (id: string, updates: Partial<NoteProps>) => void;
   onDelete?: (id: string) => void;
+  onZIndexChange?: (id: string, direction: "up" | "down") => void;
 };
 
 const Note = ({
@@ -35,6 +36,7 @@ const Note = ({
   onUpdate = () => {},
   onDelete = () => {},
   onActivate = () => {},
+  onZIndexChange = () => {},
 }: NoteProps) => {
   const noteRef = useRef<HTMLDivElement>(null);
   const dragPos = useRef({ x, y });
@@ -193,7 +195,7 @@ const Note = ({
   return (
     <div
       ref={noteRef}
-      className="absolute note"
+      className="absolute note touch-none"
       style={{
         top: localPos.y,
         left: localPos.x,
@@ -204,6 +206,12 @@ const Note = ({
     >
       {isActive && !decorMode && (
         <div className="absolute -top-8 right-0 flex gap-2 z-10 select-none">
+          <NoteControl
+            onClick={() => navigator.clipboard.writeText(content)}
+            title="📋 copy to clipboard"
+          >
+            📋
+          </NoteControl>
           <NoteControl
             title="rotate me ♻️"
             onMouseDown={handleRotateStart}
@@ -227,6 +235,22 @@ const Note = ({
           </NoteControl>
         </div>
       )}
+      {isActive && !decorMode && (
+        <div className="absolute top-0 -right-8 flex flex-col gap-2 z-10 select-none">
+          <NoteControl
+            onClick={() => onZIndexChange?.(id, "up")}
+            title="⬆️ move up"
+          >
+            ⬆️
+          </NoteControl>
+          <NoteControl
+            onClick={() => onZIndexChange?.(id, "down")}
+            title="⬇️ move down"
+          >
+            ⬇️
+          </NoteControl>
+        </div>
+      )}
 
       <div
         className={`rounded overflow-hidden ${decorMode ? "" : "shadow-xl"}`}
@@ -241,7 +265,7 @@ const Note = ({
           <div className="opacity-0 select-none py-1">Invisible</div>
         ) : (
           <button
-            className="py-1 bg-black/20 text-sm text-black select-none cursor-grab active:cursor-grabbing font-semibold text-right px-2 w-full"
+            className="py-1 bg-black/20 text-sm text-black select-none cursor-grab active:cursor-grabbing font-semibold text-right px-2 w-full touch-none"
             onMouseDown={handleDragStart}
             onTouchStart={handleDragStart}
             title="drag me 🖐️"
@@ -276,7 +300,7 @@ const Note = ({
           <div
             onMouseDown={handleResizeStart}
             onTouchStart={handleResizeStart}
-            className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize bg-black/10"
+            className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize bg-black/10 touch-none"
           />
         )}
       </div>
@@ -290,7 +314,7 @@ const NoteControl = ({
 }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
   <button
     {...props}
-    className="bg-white shadow rounded-full p-1 text-sm hover:bg-gray-100 cursor-pointer duration-300"
+    className="bg-white shadow rounded-full p-1 text-sm hover:bg-gray-100 cursor-pointer duration-300 touch-none"
   >
     {children}
   </button>

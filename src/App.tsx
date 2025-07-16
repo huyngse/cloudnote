@@ -1,25 +1,48 @@
 // App.tsx
 import { useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import Note, { type NoteProps } from "./Note.tsx";
+import Note, { type NoteProps } from "./components/Note.tsx";
+import {
+  deleteNoteById,
+  getAllNotes,
+  saveNote,
+  type StoredNote,
+} from "./indexedDbUtils.ts";
+import Toast from "./components/Toast.tsx";
 
-// `FullNote` is currently identical to `NoteProps`, but kept separate in case
-// you want to expand internal-only fields later 🌱
 type FullNote = NoteProps;
+
+function toStoredNote(note: FullNote): StoredNote {
+  const { id, content, x, y, width, height, color, rotation, zIndex } = note;
+  return { id, content, x, y, width, height, color, rotation, zIndex };
+}
 
 // utility: generate a soft pastel color with random hue
 const getRandomColor = () =>
   `hsl(${Math.floor(Math.random() * 360)}, 70%, 80%)`;
 
-const localStorageKey = "cloudnote";
 const lockDecorStorageKey = "cloudnote-lock-decor";
 
+const autoSaveNotes = async (notes: StoredNote[]) => {
+  try {
+    for (const note of notes) {
+      await saveNote(note);
+    }
+    console.log("auto-saved notes 🌿");
+  } catch (error) {
+    console.error("failed to auto-save notes (・・;)", error);
+  }
+};
+
 const CloudNote = () => {
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+  };
+
   // 📝 state for all notes
-  const [notes, setNotes] = useState<FullNote[]>(() => {
-    const saved = localStorage.getItem(localStorageKey);
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [notes, setNotes] = useState<FullNote[]>([]);
 
   // ✨ which note is currently selected
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
@@ -56,9 +79,18 @@ const CloudNote = () => {
     panRef.current = pan;
   }, [pan]);
 
-  // persist notes to localStorage anytime they change
+  // fetch from indexeddb
   useEffect(() => {
-    localStorage.setItem(localStorageKey, JSON.stringify(notes));
+    getAllNotes().then(setNotes).catch(console.error);
+  }, []);
+
+  // auto save every 5 minutes ⏳
+  useEffect(() => {
+    const interval = setInterval(() => {
+      autoSaveNotes(notes);
+    }, 1000 * 60 * 5);
+
+    return () => clearInterval(interval);
   }, [notes]);
 
   // 🌸 persist lockDecor state to localStorage anytime it changes
@@ -88,32 +120,22 @@ const CloudNote = () => {
               if (type.startsWith("image/")) {
                 const reader = new FileReader();
                 reader.onload = () => {
-                  const newNote: FullNote = {
-                    id: uuidv4(),
-                    x: 100 + Math.random() * 300,
-                    y: 100 + Math.random() * 300,
+                  const newNote = createNote({
                     width: 250,
                     height: 250,
                     content: reader.result as string,
-                    color: getRandomColor(),
-                  };
+                  });
                   setNotes((prev) => [...prev, newNote]);
+                  saveNote(toStoredNote(newNote));
                 };
                 reader.readAsDataURL(blob);
                 return;
               } else if (type === "text/plain") {
                 const text = await blob.text();
                 if (text.trim()) {
-                  const newNote: FullNote = {
-                    id: uuidv4(),
-                    x: 100 + Math.random() * 300,
-                    y: 100 + Math.random() * 300,
-                    width: 200,
-                    height: 150,
-                    content: text,
-                    color: getRandomColor(),
-                  };
+                  const newNote = createNote({ content: text });
                   setNotes((prev) => [...prev, newNote]);
+                  saveNote(toStoredNote(newNote));
                   return;
                 }
               }
@@ -199,21 +221,30 @@ const CloudNote = () => {
     };
   }, [scale]);
 
-  // ➕ add new blank note
-  const addNote = () => {
+  // shared createNote helper
+  const createNote = (partial: Partial<FullNote>): FullNote => {
     const newNote: FullNote = {
       id: uuidv4(),
-      x: 100,
-      y: 100,
-      width: 200,
-      height: 150,
-      content: "Type something...",
-      color: getRandomColor(),
-      rotation: 0,
+      x: 100 + Math.random() * 300,
+      y: 100 + Math.random() * 300,
+      width: partial.width ?? 200,
+      height: partial.height ?? 150,
+      content: partial.content ?? "Type something...",
+      color: partial.color ?? getRandomColor(),
+      rotation: partial.rotation ?? 0,
+      zIndex: partial.zIndex ?? 1,
       onUpdate: () => {},
       onDelete: () => {},
+      ...partial, // override defaults if provided
     };
-    setNotes([...notes, newNote]);
+    return newNote;
+  };
+
+  // ➕ add new blank note
+  const addNote = () => {
+    const newNote = createNote({});
+    setNotes((prev) => [...prev, newNote]);
+    saveNote(toStoredNote(newNote));
   };
 
   // 🌄 handle user-uploaded image note
@@ -222,37 +253,91 @@ const CloudNote = () => {
     if (file && file.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onload = () => {
-        const newNote: FullNote = {
-          id: uuidv4(),
-          x: 100 + Math.random() * 300,
-          y: 100 + Math.random() * 300,
+        const newNote = createNote({
           width: 250,
           height: 250,
           content: reader.result as string,
-          color: getRandomColor(),
-          onUpdate: () => {},
-          onDelete: () => {},
-        };
+        });
         setNotes((prev) => [...prev, newNote]);
+        saveNote(toStoredNote(newNote));
       };
       reader.readAsDataURL(file);
     }
   };
 
+  const addGuideNote = () => {
+    const guideContent = `
+    🌤️ welcome to cloudnote!
+    
+    here's how to use this magical little space:
+    — shift + drag: move around the canvas 🖱️
+    — shift + scroll: zoom in & out 🔍
+    — ctrl/cmd + v: paste text or images from clipboard 📋
+    — double-click a note: toggle decor mode 🌸
+    — drag & resize notes, rotate them with the top handle 🔄
+    
+    have fun and stay cozy ☁️💛
+    `.trim();
+
+    const newNote = createNote({
+      x: 100,
+      y: 100,
+      width: 500,
+      height: 300,
+      content: guideContent,
+      rotation: 0,
+    });
+
+    setNotes((prev) => [...prev, newNote]);
+    saveNote(toStoredNote(newNote));
+  };
+
   // ✏️ update a specific note by id
   const updateNote = (id: string, updates: Partial<FullNote>) => {
     setNotes((prev) =>
-      prev.map((note) => (note.id === id ? { ...note, ...updates } : note))
+      prev.map((note) => {
+        if (note.id === id) {
+          const updated = { ...note, ...updates };
+          saveNote(updated);
+          return updated;
+        }
+        return note;
+      })
     );
+  };
+
+  // 🌬️ move notes forward or back
+  const moveNoteZIndex = (id: string, direction: "up" | "down") => {
+    setNotes((prevNotes) => {
+      const targetNote = prevNotes.find((n) => n.id === id);
+      if (!targetNote) return prevNotes;
+
+      const updatedNotes = [...prevNotes];
+
+      const currentZ = targetNote.zIndex ?? 1;
+      const delta = direction === "up" ? 1 : -1;
+      const newZ = Math.max(0, currentZ + delta);
+
+      const index = updatedNotes.findIndex((n) => n.id === id);
+      updatedNotes[index] = { ...targetNote, zIndex: newZ };
+      showToast(`☁️ moved to layer ${newZ}`);
+
+      saveNote(toStoredNote(updatedNotes[index]));
+      return updatedNotes;
+    });
   };
 
   // ❌ delete a note by id
   const deleteNote = (id: string) => {
     setNotes((prev) => prev.filter((note) => note.id !== id));
+    deleteNoteById(id);
   };
 
   return (
     <div className="w-full h-screen relative bg-slate-100 overflow-auto">
+      {toastMessage && (
+        <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
+      )}
       {/* ☁️ toolbar: add note, add image, toggle decor */}
       <div className="flex justify-end bottom-0 gap-3 fixed w-full z-[1000] p-3">
         <input
@@ -282,6 +367,13 @@ const CloudNote = () => {
           title={lockDecor ? "Unlock Decor 🔓" : "Lock Decor 🔒"}
         >
           {lockDecor ? "🔒" : "🔓"}
+        </button>
+        <button
+          onClick={addGuideNote}
+          className="bg-white shadow rounded-full p-2 text-sm hover:bg-gray-100 cursor-pointer duration-300"
+          title="❓ how to use"
+        >
+          ❓
         </button>
       </div>
 
@@ -315,10 +407,11 @@ const CloudNote = () => {
               {...note}
               onUpdate={updateNote}
               onDelete={deleteNote}
-              zIndex={note.id === activeNoteId ? 999 : 1}
+              zIndex={note.id === activeNoteId ? 999 : note.zIndex ?? 1}
               isActive={note.id === activeNoteId}
               onActivate={setActiveNoteId}
               lockDecor={lockDecor}
+              onZIndexChange={moveNoteZIndex}
             />
           ))}
         </div>

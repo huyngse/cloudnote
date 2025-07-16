@@ -1,4 +1,4 @@
-# 🌤️ CloudNote
+# 🌤️ cloudnote
 
 a whimsical sticky note board for saving little thoughts, doodles, and snapshots — right in your browser.
 
