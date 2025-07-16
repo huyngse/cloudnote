@@ -24,6 +24,11 @@ const CloudNote = () => {
   // ✨ which note is currently selected
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
 
+  // give the cursor a visual cue during panning and scaling
+  const [cursorMode, setCursorMode] = useState<
+    "default" | "panning" | "scaling"
+  >("default");
+
   // 🌼 toggles decorative lock
   const [lockDecor, setLockDecor] = useState<boolean>(() => {
     const saved = localStorage.getItem(lockDecorStorageKey);
@@ -129,6 +134,7 @@ const CloudNote = () => {
     const handleMouseDown = (e: MouseEvent) => {
       if (e.shiftKey) {
         isPanning.current = true;
+        setCursorMode("panning");
         startX.current = e.clientX;
         startY.current = e.clientY;
       }
@@ -151,6 +157,7 @@ const CloudNote = () => {
 
     const handleMouseUp = () => {
       isPanning.current = false;
+      setCursorMode("default");
     };
 
     window.addEventListener("mousedown", handleMouseDown);
@@ -171,10 +178,17 @@ const CloudNote = () => {
 
       e.preventDefault();
 
+      setCursorMode("scaling");
+
       let newScale = scale - e.deltaY * 0.001;
       newScale = Math.min(Math.max(newScale, 0.5), 2);
 
       setScale(newScale);
+
+      clearTimeout((handleWheel as any)._timeout);
+      (handleWheel as any)._timeout = setTimeout(() => {
+        setCursorMode("default");
+      }, 300);
     };
 
     const container = containerRef.current;
@@ -274,7 +288,11 @@ const CloudNote = () => {
       {/* 🌤️ main canvas area */}
       <div
         ref={containerRef}
-        className="w-full h-full overflow-hidden"
+        className={`
+          w-full h-full overflow-hidden
+          ${cursorMode === "panning" ? "cursor-grabbing select-none" : ""}
+          ${cursorMode === "scaling" ? "cursor-zoom-in" : ""}
+        `}
         onClick={(e) => {
           if (!(e.target as HTMLElement).closest(".note")) {
             setActiveNoteId(null);
