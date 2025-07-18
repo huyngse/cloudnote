@@ -1,7 +1,7 @@
 // components/Note.tsx
 import React, { useEffect, useRef, useState } from "react";
 
-export type NoteProps = {
+export type HeliodorNoteProps = {
   id: string;
   x: number;
   y: number;
@@ -16,12 +16,12 @@ export type NoteProps = {
   lockDecor?: boolean;
   scale?: number;
   onActivate?: (id: string) => void;
-  onUpdate?: (id: string, updates: Partial<NoteProps>) => void;
+  onUpdate?: (id: string, updates: Partial<HeliodorNoteProps>) => void;
   onDelete?: (id: string) => void;
   onZIndexChange?: (id: string, direction: "up" | "down") => void;
 };
 
-const Note = ({
+const HeliodorNote = ({
   id,
   x = 100,
   y = 100,
@@ -39,7 +39,7 @@ const Note = ({
   onDelete = () => {},
   onActivate = () => {},
   onZIndexChange = () => {},
-}: NoteProps) => {
+}: HeliodorNoteProps) => {
   const noteRef = useRef<HTMLDivElement>(null);
   const dragPos = useRef({ x, y });
   const resizeRef = useRef({ width, height });
@@ -324,4 +324,4 @@ const NoteControl = ({
   </button>
 );
 
-export default React.memo(Note);
+export default React.memo(HeliodorNote);

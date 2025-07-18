@@ -1,10 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import CloudNote from './App'
+import Heliodor from './pages/Heliodor'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <CloudNote />
+    <Heliodor />
   </StrictMode>,
 )
