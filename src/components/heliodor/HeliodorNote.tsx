@@ -137,7 +137,7 @@ const HeliodorNote = ({
         }}
         onMouseDown={() => !decorMode && onActivate(id)}
       >
-        {!decorMode && (
+        {!decorMode ? (
           <button
             className="py-1 bg-black/20 text-sm text-black select-none cursor-grab active:cursor-grabbing font-semibold text-right px-2 w-full touch-none"
             title="drag me 🖐️"
@@ -145,6 +145,8 @@ const HeliodorNote = ({
           >
             ⋮⋮
           </button>
+        ) : (
+          <div className="py-1 opacity-0">⋮⋮</div>
         )}
 
         <NoteContent
