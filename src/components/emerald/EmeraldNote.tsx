@@ -1,7 +1,8 @@
-// components/Note.tsx
+// EmeraldNote.tsx
 import React, { useEffect, useRef, useState } from "react";
+import type { NoteDraw } from "../../pages/Emerald";
 
-export type HeliodorNoteProps = {
+export type EmeraldNoteProps = {
   id: string;
   x: number;
   y: number;
@@ -11,17 +12,15 @@ export type HeliodorNoteProps = {
   color: string;
   zIndex?: number;
   rotation?: number;
-  decorMode?: boolean;
   isActive?: boolean;
-  lockDecor?: boolean;
   scale?: number;
   onActivate?: (id: string) => void;
-  onUpdate?: (id: string, updates: Partial<HeliodorNoteProps>) => void;
+  onUpdate?: (id: string, updates: Partial<EmeraldNoteProps>) => void;
   onDelete?: (id: string) => void;
-  onZIndexChange?: (id: string, direction: "up" | "down") => void;
+  onApply?: (note: NoteDraw) => void;
 };
 
-const HeliodorNote = ({
+const EmeraldNote = ({
   id,
   x = 100,
   y = 100,
@@ -29,17 +28,14 @@ const HeliodorNote = ({
   height = 150,
   content = "",
   color = `hsl(${Math.floor(Math.random() * 360)}, 70%, 80%)`,
-  zIndex = 1,
   rotation = 0,
-  decorMode = false,
   isActive = false,
-  lockDecor = false,
   scale = 1,
   onUpdate = () => {},
   onDelete = () => {},
   onActivate = () => {},
-  onZIndexChange = () => {},
-}: HeliodorNoteProps) => {
+  onApply = () => {},
+}: EmeraldNoteProps) => {
   const noteRef = useRef<HTMLDivElement>(null);
   const dragPos = useRef({ x, y });
   const resizeRef = useRef({ width, height });
@@ -190,32 +186,37 @@ const HeliodorNote = ({
     document.addEventListener("touchend", handleEnd);
   };
 
-  const handleDoubleClick = () => {
-    onUpdate(id, { decorMode: !decorMode });
+  const handleApplyNote = () => {
+    if (content.trim()) {
+      onApply({
+        content,
+        x: localPos.x,
+        y: localPos.y,
+        width: localSize.width,
+        height: localSize.height,
+        rotation: localRotation.rotation,
+      });
+      onDelete?.(id);
+    }
   };
 
   return (
     <div
       ref={noteRef}
-      className={`absolute touch-none ${decorMode ? "" : "note"} ${
-        lockDecor && decorMode ? "pointer-events-none" : ""
-      }`}
+      className={`absolute touch-none note`}
       style={{
         top: localPos.y,
         left: localPos.x,
         transform: `rotate(${localRotation.rotation}deg)`,
         transformOrigin: "center center",
-        zIndex,
       }}
     >
-      {isActive && !decorMode && (
+      {isActive && (
         <div className="absolute -top-8 right-0 flex gap-2 z-10 select-none">
-          <NoteControl
-            onClick={() => navigator.clipboard.writeText(content)}
-            title="📋 copy to clipboard"
-          >
-            📋
+          <NoteControl onClick={handleApplyNote} title="✔️ apply note">
+            ✔️
           </NoteControl>
+
           <NoteControl
             title="rotate me ♻️"
             onMouseDown={handleRotateStart}
@@ -228,85 +229,48 @@ const HeliodorNote = ({
           >
             ♻️
           </NoteControl>
-          <NoteControl
-            title="decorate 🌿"
-            onClick={() => onUpdate(id, { decorMode: true })}
-          >
-            🌿
-          </NoteControl>
           <NoteControl title="delete ✖️" onClick={() => onDelete(id)}>
             ✖️
           </NoteControl>
         </div>
       )}
-      {isActive && !decorMode && (
-        <div className="absolute top-0 -right-8 flex flex-col gap-2 z-10 select-none">
-          <NoteControl
-            onClick={() => onZIndexChange?.(id, "up")}
-            title="⬆️ move up"
-          >
-            ⬆️
-          </NoteControl>
-          <NoteControl
-            onClick={() => onZIndexChange?.(id, "down")}
-            title="⬇️ move down"
-          >
-            ⬇️
-          </NoteControl>
-        </div>
-      )}
-
       <div
-        className={`rounded overflow-hidden ${decorMode ? "" : "shadow-xl"}`}
+        className={`rounded overflow-hidden shadow-xl"}`}
         style={{
           width: localSize.width,
           height: localSize.height,
-          backgroundColor: decorMode ? "transparent" : color,
+          backgroundColor: color,
         }}
-        onMouseDown={() => !decorMode && onActivate?.(id)}
+        onMouseDown={() => onActivate?.(id)}
       >
-        {decorMode ? (
-          <div className="opacity-0 select-none py-1">Invisible</div>
-        ) : (
-          <button
-            className="py-1 bg-black/20 text-sm text-black select-none cursor-grab active:cursor-grabbing font-semibold text-right px-2 w-full touch-none"
-            onMouseDown={handleDragStart}
-            onTouchStart={handleDragStart}
-            title="drag me 🖐️"
-          >
-            ⋮⋮
-          </button>
-        )}
+        <button
+          className="py-1 bg-black/20 text-sm text-black select-none cursor-grab active:cursor-grabbing font-semibold text-right px-2 w-full touch-none"
+          onMouseDown={handleDragStart}
+          onTouchStart={handleDragStart}
+          title="drag me 🖐️"
+        >
+          ⋮⋮
+        </button>
 
         {content.startsWith("data:image") ? (
           <img
             src={content}
             alt="clipboard"
             className="w-full h-[calc(100%-2rem)] object-contain"
-            onDoubleClick={
-              decorMode && !lockDecor ? handleDoubleClick : undefined
-            }
           />
         ) : (
           <textarea
-            readOnly={decorMode}
-            tabIndex={decorMode ? -1 : 0}
             className="w-full h-[calc(100%-2rem)] resize-none bg-transparent focus:outline-none p-2"
             value={content}
             onChange={(e) => onUpdate(id, { content: e.target.value })}
-            onDoubleClick={
-              decorMode && !lockDecor ? handleDoubleClick : undefined
-            }
           />
         )}
 
-        {!decorMode && (
-          <div
-            onMouseDown={handleResizeStart}
-            onTouchStart={handleResizeStart}
-            className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize bg-black/10 touch-none"
-          />
-        )}
+        <div
+          onMouseDown={handleResizeStart}
+          onTouchStart={handleResizeStart}
+          className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize bg-black/10 touch-none"
+        />
       </div>
     </div>
   );
@@ -324,4 +288,4 @@ const NoteControl = ({
   </button>
 );
 
-export default React.memo(HeliodorNote);
+export default React.memo(EmeraldNote);

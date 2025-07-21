@@ -1,7 +1,7 @@
 // App.tsx
 import { useCallback, useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import Note, { type HeliodorNoteProps } from "../components/HeliodorNote.tsx";
+import Note, { type HeliodorNoteProps } from "../components/heliodor/HeliodorNote.tsx";
 import {
   deleteNoteById,
   getAllNotes,
@@ -242,7 +242,7 @@ const Heliodor = () => {
         active?.tagName === "INPUT" ||
         (active as HTMLElement)?.isContentEditable;
   
-      if (isEditing) return; // don’t delete while typing, that would be spooky (⊙﹏⊙)
+      if (isEditing) return; // don’t delete while typing
   
       if (activeNoteId && (e.key === "Backspace" || e.key === "Delete")) {
         e.preventDefault(); // avoid browser weirdness
