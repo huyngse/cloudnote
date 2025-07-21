@@ -1,57 +1,60 @@
 # 🌤️ cloudnote
 
-a whimsical sticky note board for saving little thoughts, doodles, and snapshots — right in your browser.
+Welcome to **cloudnote** - the note-taking app with a name that’s a total lie.
+
+Despite sounding like it lives in a server farm somewhere between Jupiter and your fridge, **cloudnote works 100% offline**. That’s right: no clouds, no accounts, no mysterious syncing - just your browser and your beautiful brain.
+
+Think of it as a digital sticky note board powered by pure vibes and local storage magic.
 
 ![screenshot](https://cloudnote-beryl.vercel.app/og-preview.png)  
 
 ---
 
-## ✨ features
+## ✨ Features
 
-🌼 **create colorful notes**  
-➕ click the add button to create a new note with a soft pastel hue.
+🌼 **Create colorful notes**  
+➕ Click the plus button to summon a new pastel note - like summoning a thought sprite with better handwriting.
 
-📋 **paste text & images**  
-just press `ctrl+v` / `cmd+v` to instantly turn clipboard content into a note (supports text & images!).
+📋 **Paste text & images**  
+`Ctrl+V` / `Cmd+V` your way to glory. cloudnote turns whatever's on your clipboard (text or image) into a new note - instantly, like a magician with sticky fingers.
 
-🖐️ **drag & move**  
-grab the top bar and drag your notes freely across your canvas — rearrange your thoughts like poetry.
+🖐️ **Drag & move**  
+Rearrange your notes like fridge magnets of wisdom. Drag them around and pretend you're organizing your life.
 
-↔️ **resize**  
-pull the little corner to make your notes bigger or smaller, as spacious as you need.
+↔️ **Resize**  
+Pull the corner to resize your note. Make it large for Important Thoughts™ or tiny for secrets.
 
-♻️ **rotate**  
-click the rotate button to spin your note gently — because sometimes we just need a new perspective.
+♻️ **Rotate**  
+Click the rotate button and give your note a fresh new angle - for when you literally need to *look at things differently*.
 
-🌿 **decor mode**  
-double-click or press the 🌿 button to turn a note into a non-editable decoration — quiet and serene.
+🌿 **Decor mode**  
+Double-click (or press the 🌿 button) to turn a note into a chill, non-editable decoration. Great for quotes, doodles, or reminders that “you got this”.
 
-🔒 **lock decor**  
-toggle decor interactions with the lock button — so your aesthetic notes stay just the way they are.
+🔒 **Lock decor**  
+Toggle the lock button to freeze your aesthetic masterpieces. No more accidental edits - just frozen perfection.
 
-🗑️ **delete**  
-press the ✖️ to say goodbye to a note — a soft farewell to make space for something new.
+🗑️ **Delete**  
+Click ✖️ to gracefully say goodbye to a note. It's not you, it's just... minimalism.
 
-💾 **localStorage persistence**  
-your notes are saved locally under the key `cloudnote` — they’ll stay cozy even after a refresh.
-
----
-
-## 💻 tech stack
-
-- **react** with **typescript**
-- **tailwindcss** for styling
-- **uuid** for unique note ids
-- **localStorage** for saving notes
-- pure css + dom for drag, resize & rotate logic
+💾 **Local storage persistence**  
+Everything lives right in your browser under the sacred key `cloudnote`. Notes stay snug and safe, even after a page refresh. It’s like the cloud, but smaller, cozier, and not spying on you.
 
 ---
 
-## 🚀 getting started
+## 💻 Tech stack
+
+- **React** with **TypeScript**
+- **TailwindCSS** for that sweet sweet style
+- **UUID** for one-of-a-kind note identities
+- **IndexedDB** for durable local memory
+- 100% hand-crafted **CSS + DOM logic** for dragging, resizing & rotating - no libraries, just vibes
+
+---
+
+## 🚀 Getting started
 
 ```bash
 git clone https://github.com/huyngse/cloudnote.git
 cd cloudnote
 npm install
 npm run dev
-```
