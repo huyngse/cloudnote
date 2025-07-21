@@ -63,3 +63,25 @@ export async function deleteNoteById(id: string): Promise<void> {
         request.onerror = () => reject(request.error);
     });
 }
+
+export async function exportNotes(): Promise<void> {
+    const notes = await getAllNotes();
+    const blob = new Blob([JSON.stringify(notes, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "cloudnote-backup.json";
+    a.click();
+
+    URL.revokeObjectURL(url); // Cleanup~
+}
+
+export async function importNotesFromFile(file: File): Promise<void> {
+    const text = await file.text();
+    const notes: StoredNote[] = JSON.parse(text);
+
+    for (const note of notes) {
+        await saveNote(note);
+    }
+}

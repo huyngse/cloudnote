@@ -1,4 +1,3 @@
-import { useState } from "react";
 import Note from "@/components/heliodor/HeliodorNote";
 import { HeliodorToolbar } from "@/components/heliodor/HeliodorToolbar";
 import Toast from "@/components/Toast";
@@ -6,15 +5,12 @@ import { useCameraControls } from "@/hooks/useCameraControls";
 import { useHeliodorNotes } from "@/hooks/useHeliodorNotes";
 import { useClipboardHandler } from "@/hooks/useClipboardHandler";
 import { useDeleteShortcut } from "@/hooks/useDeleteShortcut";
+import { useToast } from "@/hooks/useToast";
 
 const Heliodor = () => {
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { message, showToast, clearToast } = useToast();
   const { pan, scale, cursorMode, containerRef, getCenterPosition } =
     useCameraControls();
-
-  const showToast = (message: string) => {
-    setToastMessage(message);
-  };
 
   const {
     notes,
@@ -37,9 +33,7 @@ const Heliodor = () => {
 
   return (
     <div className="w-full h-screen relative bg-slate-100 overflow-auto">
-      {toastMessage && (
-        <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
-      )}
+      {message && <Toast message={message} onClose={clearToast} />}
 
       {/* ☁️ toolbar */}
       <HeliodorToolbar
