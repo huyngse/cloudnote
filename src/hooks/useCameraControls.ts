@@ -33,6 +33,50 @@ export const useCameraControls = () => {
     const [cursorMode, setCursorMode] = useState<"default" | "panning" | "scaling">("default");
 
     const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const handleWheel = (e: WheelEvent) => {
+            e.preventDefault();
+            setCursorMode("scaling");
+
+            const container = containerRef.current;
+            if (!container) return;
+
+            const rect = container.getBoundingClientRect();
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+
+            const currentPan = panRef.current;
+            const currentScale = scaleRef.current;
+
+            const canvasX = (centerX - currentPan.x) / currentScale;
+            const canvasY = (centerY - currentPan.y) / currentScale;
+
+            let newScale = currentScale - e.deltaY * 0.001;
+            newScale = Math.min(Math.max(newScale, 0.5), 2);
+
+            const newPanX = centerX - canvasX * newScale;
+            const newPanY = centerY - canvasY * newScale;
+
+            setScale(newScale);
+            setPan({ x: newPanX, y: newPanY });
+
+            clearTimeout((handleWheel as any)._timeout);
+            (handleWheel as any)._timeout = setTimeout(() => {
+                setCursorMode("default");
+            }, 300);
+        };
+
+        container.addEventListener("wheel", handleWheel, { passive: false });
+
+        return () => {
+            container.removeEventListener("wheel", handleWheel);
+        };
+    }, []);
+
     const scaleRef = useRef(scale);
     const panRef = useRef(pan);
 
