@@ -1,4 +1,6 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect } from "react";
+import { useDrag } from "@use-gesture/react";
+import { useEditorContext } from "@/contexts/EditorContext";
 
 export function useNoteResize(
     id: string,
@@ -9,57 +11,35 @@ export function useNoteResize(
     setLocalSize: (size: { width: number; height: number }) => void
 ) {
     const resizeRef = useRef({ width, height });
+    const { isResizingNoteRef } = useEditorContext();
+
 
     useEffect(() => {
         resizeRef.current = { width, height };
         setLocalSize({ width, height });
     }, [width, height, setLocalSize]);
 
-    const getClientCoords = (
-        e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent
-    ) =>
-        "touches" in e
-            ? { x: e.touches[0].pageX, y: e.touches[0].pageY }
-            : { x: e.pageX, y: e.pageY };
+    const bind = useDrag(({ movement: [mx, my], first, last }) => {
+        if (first) {
+            resizeRef.current = { width, height }; // Reset to initial size at start
+            isResizingNoteRef.current = true;
+        }
 
-    const handleResizeStart = useCallback(
-        (e: React.MouseEvent | React.TouchEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
+        const newWidth = resizeRef.current.width + mx / scale;
+        const newHeight = resizeRef.current.height + my / scale;
 
-            const start = getClientCoords(e);
-            const startWidth = resizeRef.current.width;
-            const startHeight = resizeRef.current.height;
+        const clampedSize = {
+            width: Math.max(1, newWidth),
+            height: Math.max(1, newHeight),
+        };
 
-            const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
-                const move = getClientCoords(moveEvent);
-                const newWidth = startWidth + (move.x - start.x) / scale;
-                const newHeight = startHeight + (move.y - start.y) / scale;
-                resizeRef.current = { width: newWidth, height: newHeight };
-                setLocalSize(resizeRef.current);
-            };
+        setLocalSize(clampedSize);
 
-            const handleEnd = () => {
-                onUpdate(id, resizeRef.current);
-                cleanup();
-            };
+        if (last) {
+            onUpdate(id, clampedSize);
+            isResizingNoteRef.current = false;
+        }
+    });
 
-            const cleanup = () => {
-                document.removeEventListener("mousemove", handleMove as any);
-                document.removeEventListener("mouseup", handleEnd);
-                document.removeEventListener("touchmove", handleMove as any);
-                document.removeEventListener("touchend", handleEnd);
-            };
-
-            document.addEventListener("mousemove", handleMove as any);
-            document.addEventListener("mouseup", handleEnd);
-            document.addEventListener("touchmove", handleMove as any, {
-                passive: false,
-            });
-            document.addEventListener("touchend", handleEnd);
-        },
-        [id, scale, onUpdate, setLocalSize]
-    );
-
-    return { handleResizeStart };
+    return { bind };
 }

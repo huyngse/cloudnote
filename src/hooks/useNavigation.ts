@@ -3,7 +3,6 @@ import { useEffect, useState, useCallback } from 'react';
 
 export const useNavigation = () => {
     const [path, setPath] = useState(() => window.location.pathname);
-    console.log(path)
     useEffect(() => {
         const handlePop = () => setPath(window.location.pathname);
         window.addEventListener('popstate', handlePop);

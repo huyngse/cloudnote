@@ -1,4 +1,6 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useEffect, useRef } from "react";
+import { useDrag } from "@use-gesture/react";
+import { useEditorContext } from "@/contexts/EditorContext";
 
 export function useNoteDrag(
     id: string,
@@ -9,55 +11,34 @@ export function useNoteDrag(
     setLocalPos: (pos: { x: number; y: number }) => void
 ) {
     const dragPos = useRef({ x, y });
+    const { isDraggingNoteRef } = useEditorContext();
 
     useEffect(() => {
         dragPos.current = { x, y };
         setLocalPos({ x, y });
     }, [x, y, setLocalPos]);
 
-    const getClientCoords = (
-        e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent
-    ) =>
-        "touches" in e
-            ? { x: e.touches[0].pageX, y: e.touches[0].pageY }
-            : { x: e.pageX, y: e.pageY };
+    const bind = useDrag(
+        ({ event, offset: [dx, dy], first, last }) => {
+            event?.stopPropagation();
 
-    const handleDragStart = useCallback(
-        (e: React.MouseEvent | React.TouchEvent) => {
-            e.preventDefault();
-            const start = getClientCoords(e);
-            const offsetX = start.x - dragPos.current.x * scale;
-            const offsetY = start.y - dragPos.current.y * scale;
+            const newX = dx / scale;
+            const newY = dy / scale;
 
-            const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
-                const move = getClientCoords(moveEvent);
-                const newX = (move.x - offsetX) / scale;
-                const newY = (move.y - offsetY) / scale;
-                dragPos.current = { x: newX, y: newY };
-                setLocalPos(dragPos.current);
-            };
+            dragPos.current = { x: newX, y: newY };
+            setLocalPos(dragPos.current);
 
-            const handleEnd = () => {
+            if (first) isDraggingNoteRef.current = true;
+            if (last) {
                 onUpdate(id, dragPos.current);
-                cleanup();
-            };
-
-            const cleanup = () => {
-                document.removeEventListener("mousemove", handleMove as any);
-                document.removeEventListener("mouseup", handleEnd);
-                document.removeEventListener("touchmove", handleMove as any);
-                document.removeEventListener("touchend", handleEnd);
-            };
-
-            document.addEventListener("mousemove", handleMove as any);
-            document.addEventListener("mouseup", handleEnd);
-            document.addEventListener("touchmove", handleMove as any, {
-                passive: false,
-            });
-            document.addEventListener("touchend", handleEnd);
+                isDraggingNoteRef.current = false;
+            }
         },
-        [id, scale, onUpdate, setLocalPos]
+        {
+            from: () => [dragPos.current.x * scale, dragPos.current.y * scale],
+            pointer: { touch: true }, // handles both touch and mouse! (*≧▽≦)
+        }
     );
 
-    return { handleDragStart };
+    return { bind };
 }

@@ -69,7 +69,7 @@ const HeliodorNote = ({
     setLocalRotation({ rotation });
   }, [rotation]);
 
-  const { handleDragStart } = useNoteDrag(
+  const { bind: dragBind } = useNoteDrag(
     id,
     x,
     y,
@@ -77,8 +77,8 @@ const HeliodorNote = ({
     onUpdate,
     setLocalPos
   );
-  
-  const { handleResizeStart } = useNoteResize(
+
+  const { bind: resizeBind } = useNoteResize(
     id,
     width,
     height,
@@ -87,7 +87,7 @@ const HeliodorNote = ({
     setLocalSize
   );
 
-  const { handleRotateStart } = useNoteRotate(
+  const { gestureTargetRef } = useNoteRotate(
     id,
     rotation,
     onUpdate,
@@ -116,7 +116,7 @@ const HeliodorNote = ({
         isActive={isActive}
         decorMode={decorMode}
         onCopy={() => navigator.clipboard.writeText(content)}
-        onRotateStart={handleRotateStart}
+        rotateRef={gestureTargetRef}
         onDecorate={() => onUpdate(id, { decorMode: true })}
         onDelete={() => onDelete(id)}
         onZIndexChange={(dir) => onZIndexChange(id, dir)}
@@ -140,9 +140,8 @@ const HeliodorNote = ({
         {!decorMode && (
           <button
             className="py-1 bg-black/20 text-sm text-black select-none cursor-grab active:cursor-grabbing font-semibold text-right px-2 w-full touch-none"
-            onMouseDown={handleDragStart}
-            onTouchStart={handleDragStart}
             title="drag me 🖐️"
+            {...dragBind()}
           >
             ⋮⋮
           </button>
@@ -158,8 +157,7 @@ const HeliodorNote = ({
 
         {!decorMode && (
           <div
-            onMouseDown={handleResizeStart}
-            onTouchStart={handleResizeStart}
+            {...resizeBind()}
             className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize bg-black/10 touch-none"
           />
         )}

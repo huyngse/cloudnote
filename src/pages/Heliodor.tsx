@@ -55,14 +55,17 @@ const Heliodor = () => {
       <div
         ref={containerRef}
         className={`
-          w-full h-full overflow-hidden
-          ${cursorMode === "panning" ? "cursor-grabbing select-none" : ""}
-          ${cursorMode === "scaling" ? "cursor-zoom-in" : ""}
+          w-full h-full overflow-hidden ${
+            cursorMode === "panning" ? "cursor-grabbing select-none" : ""
+          } ${cursorMode === "scaling" ? "cursor-zoom-in" : ""}
         `}
         onClick={(e) => {
           if (!(e.target as HTMLElement).closest(".note")) {
             setActiveNoteId(null);
           }
+        }}
+        style={{
+          touchAction: "none",
         }}
       >
         <div

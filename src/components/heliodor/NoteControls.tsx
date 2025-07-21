@@ -1,7 +1,9 @@
+import { forwardRef, type ButtonHTMLAttributes, type RefObject } from "react";
+
 type NoteControlsProps = {
   isActive: boolean;
   decorMode: boolean;
-  onRotateStart: (e: React.MouseEvent | React.TouchEvent) => void;
+  rotateRef: RefObject<HTMLButtonElement | null>;
   onDelete: () => void;
   onCopy: () => void;
   onZIndexChange: (direction: "up" | "down") => void;
@@ -12,7 +14,7 @@ type NoteControlsProps = {
 export const NoteControls = ({
   isActive,
   decorMode,
-  onRotateStart,
+  rotateRef,
   onDelete,
   onCopy,
   onZIndexChange,
@@ -26,7 +28,7 @@ export const NoteControls = ({
           📋
         </NoteControl>
         <NoteControl
-          onMouseDown={onRotateStart}
+          ref={rotateRef}
           onDoubleClick={onResetRotation}
           title="rotate me ♻️"
         >
@@ -53,14 +55,15 @@ export const NoteControls = ({
     </>
   ) : null;
 
-const NoteControl = ({
-  children,
-  ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+const NoteControl = forwardRef<
+  HTMLButtonElement,
+  ButtonHTMLAttributes<HTMLButtonElement>
+>(({ children, ...props }, ref) => (
   <button
     {...props}
+    ref={ref}
     className="bg-white shadow rounded-full p-1 text-sm hover:bg-gray-100 cursor-pointer duration-300 touch-none"
   >
     {children}
   </button>
-);
+));

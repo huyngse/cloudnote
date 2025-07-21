@@ -1,68 +1,75 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useEffect, useRef, type RefObject } from "react";
+import { useGesture } from "@use-gesture/react";
+import { useEditorContext } from "@/contexts/EditorContext";
+
+type RotateRef = {
+    rotation: number;
+    initialAngle?: number;
+    startRotation?: number;
+}
 
 export function useNoteRotate(
     id: string,
     rotation: number,
     onUpdate: (id: string, updates: { rotation: number }) => void,
     setLocalRotation: (rotation: { rotation: number }) => void,
-    noteRef: React.RefObject<HTMLElement | null>
+    noteRef: RefObject<HTMLElement | null>
 ) {
-    const rotateRef = useRef({ rotation });
+    const rotateRef = useRef<RotateRef>({ rotation });
+    const { isRotatingNoteRef } = useEditorContext();
 
+    // Update internal ref when external rotation changes
     useEffect(() => {
         rotateRef.current = { rotation };
         setLocalRotation({ rotation });
     }, [rotation, setLocalRotation]);
 
-    const handleRotateStart = useCallback(
-        (e: React.MouseEvent | React.TouchEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
+    const gestureTargetRef = useRef<HTMLButtonElement | null>(null);
 
-            const rect = noteRef.current?.getBoundingClientRect();
-            if (!rect) return;
+    useGesture(
+        {
+            onDrag: ({ xy: [x, y], first, last }) => {
+                const rect = noteRef.current?.getBoundingClientRect();
+                if (!rect) return;
 
-            const { clientX, clientY } = "touches" in e ? e.touches[0] : e;
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const angle =
+                    Math.atan2(y - centerY, x - centerX) * (180 / Math.PI);
 
-            const initialAngle =
-                Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI);
-            const startRotation = rotateRef.current.rotation;
+                if (first) {
+                    // Store initial rotation and angle when drag starts
+                    rotateRef.current = {
+                        ...rotateRef.current,
+                        initialAngle: angle,
+                        startRotation: rotateRef.current.rotation,
+                    };
+                    isRotatingNoteRef.current = true;
+                }
 
-            const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
-                const { clientX: moveX, clientY: moveY } =
-                    "touches" in moveEvent ? moveEvent.touches[0] : moveEvent;
-                const currentAngle =
-                    Math.atan2(moveY - centerY, moveX - centerX) * (180 / Math.PI);
-                const angleDiff = currentAngle - initialAngle;
-                const newRotation = startRotation + angleDiff;
+                const angleDiff = angle - (rotateRef.current.initialAngle ?? 0);
+                const newRotation = (rotateRef.current.startRotation ?? 0) + angleDiff;
 
-                rotateRef.current = { rotation: newRotation };
-                setLocalRotation(rotateRef.current);
-            };
+                rotateRef.current.rotation = newRotation;
+                setLocalRotation({ rotation: newRotation });
 
-            const handleEnd = () => {
-                onUpdate(id, rotateRef.current);
-                cleanup();
-            };
-
-            const cleanup = () => {
-                document.removeEventListener("mousemove", handleMove as any);
-                document.removeEventListener("mouseup", handleEnd);
-                document.removeEventListener("touchmove", handleMove as any);
-                document.removeEventListener("touchend", handleEnd);
-            };
-
-            document.addEventListener("mousemove", handleMove as any);
-            document.addEventListener("mouseup", handleEnd);
-            document.addEventListener("touchmove", handleMove as any, {
-                passive: false,
-            });
-            document.addEventListener("touchend", handleEnd);
+                if (last) {
+                    onUpdate(id, { rotation: newRotation });
+                    isRotatingNoteRef.current = false;
+                }
+            },
         },
-        [id, noteRef, onUpdate, setLocalRotation]
+        {
+            target: gestureTargetRef,
+            eventOptions: { passive: false },
+            drag: {
+                pointer: { buttons: [1] }, // Left click only
+                filterTaps: true,
+            },
+        }
     );
 
-    return { handleRotateStart };
+    return {
+        gestureTargetRef,
+    };
 }
