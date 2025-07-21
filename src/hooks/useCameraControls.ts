@@ -80,7 +80,7 @@ export const useCameraControls = () => {
     const scaleRef = useRef(scale);
     const panRef = useRef(pan);
 
-    const { isDraggingNoteRef, isRotatingNoteRef, isResizingNoteRef } = useEditorContext();
+    const { isDraggingNoteRef, isRotatingNoteRef, isResizingNoteRef, isEditingNoteRef } = useEditorContext();
 
     // Keep refs in sync
     useEffect(() => { scaleRef.current = scale }, [scale]);
@@ -95,7 +95,7 @@ export const useCameraControls = () => {
     useGesture(
         {
             onDrag: ({ delta: [dx, dy], pinching }) => {
-                if (isDraggingNoteRef.current || isRotatingNoteRef.current || isResizingNoteRef.current || pinching) return;
+                if (isDraggingNoteRef.current || isRotatingNoteRef.current || isResizingNoteRef.current || isEditingNoteRef.current || pinching) return;
                 if (!pinching) {
                     setPan((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
                     setCursorMode("panning");

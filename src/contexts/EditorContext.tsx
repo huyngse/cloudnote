@@ -11,6 +11,7 @@ type EditorContextType = {
   isDraggingNoteRef: RefObject<boolean>;
   isResizingNoteRef: RefObject<boolean>;
   isRotatingNoteRef: RefObject<boolean>;
+  isEditingNoteRef: RefObject<boolean>;
 };
 
 const EditorContext = createContext<EditorContextType | null>(null);
@@ -21,10 +22,16 @@ export const EditorProvider: React.FC<{ children: ReactNode }> = ({
   const isDraggingNoteRef = useRef(false);
   const isResizingNoteRef = useRef(false);
   const isRotatingNoteRef = useRef(false);
+  const isEditingNoteRef = useRef(false);
 
   return (
     <EditorContext.Provider
-      value={{ isDraggingNoteRef, isResizingNoteRef, isRotatingNoteRef }}
+      value={{
+        isDraggingNoteRef,
+        isResizingNoteRef,
+        isRotatingNoteRef,
+        isEditingNoteRef,
+      }}
     >
       {children}
     </EditorContext.Provider>

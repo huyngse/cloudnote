@@ -7,6 +7,7 @@ import {
 } from "@/utils/indexedDbUtils";
 import { createNote, toStoredNote } from "@/utils/noteHelpers";
 import { type HeliodorNoteProps } from "@/components/heliodor/HeliodorNote";
+import { useEditorContext } from "@/contexts/EditorContext";
 
 const lockDecorStorageKey = "cloudnote-lock-decor";
 
@@ -20,8 +21,18 @@ export const useHeliodorNotes = (
         const saved = localStorage.getItem(lockDecorStorageKey);
         return saved ? JSON.parse(saved) : false;
     });
+    const { isEditingNoteRef } = useEditorContext();
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+    useEffect(() => {
+        if (activeNoteId) {
+            isEditingNoteRef.current = true;
+        } else {
+            isEditingNoteRef.current = false;
+        }
+    }, [activeNoteId])
+
 
     useEffect(() => {
         getAllNotes().then(setNotes).catch(console.error);
@@ -31,21 +42,21 @@ export const useHeliodorNotes = (
         localStorage.setItem(lockDecorStorageKey, JSON.stringify(lockDecor));
     }, [lockDecor]);
 
-    const autoSaveNotes = async () => {
-        try {
-            for (const note of notes) {
-                await saveNote(toStoredNote(note));
-            }
-            console.log("auto-saved notes 🌿");
-        } catch (error) {
-            console.error("failed to auto-save notes (・・;)", error);
-        }
-    };
+    // const autoSaveNotes = async () => {
+    //     try {
+    //         for (const note of notes) {
+    //             await saveNote(toStoredNote(note));
+    //         }
+    //         console.log("auto-saved notes 🌿");
+    //     } catch (error) {
+    //         console.error("failed to auto-save notes (・・;)", error);
+    //     }
+    // };
 
-    useEffect(() => {
-        const interval = setInterval(() => autoSaveNotes(), 1000 * 60 * 5);
-        return () => clearInterval(interval);
-    }, [notes]);
+    // useEffect(() => {
+    //     const interval = setInterval(() => autoSaveNotes(), 1000 * 60 * 5);
+    //     return () => clearInterval(interval);
+    // }, [notes]);
 
     const addNote = () => {
         const newNote = createNote(getCenterPosition, {});
