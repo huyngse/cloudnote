@@ -1,11 +1,11 @@
 // hooks/useClipboardHandler.ts
-import { useEffect } from "react";
+import { useEffect, type Dispatch, type SetStateAction } from "react";
 import { createNote, toStoredNote } from "@/utils/noteHelpers";
 import { saveNote } from "@/utils/indexedDbUtils";
 import { type HeliodorNoteProps } from "@/components/heliodor/HeliodorNote";
 
 export const useClipboardHandler = (
-    setNotes: React.Dispatch<React.SetStateAction<HeliodorNoteProps[]>>,
+    setNotes: Dispatch<SetStateAction<HeliodorNoteProps[]>>,
     getCenterPosition: () => { x: number; y: number } | null
 ) => {
     useEffect(() => {
