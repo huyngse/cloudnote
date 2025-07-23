@@ -6,6 +6,7 @@ import { useHeliodorNotes } from "@/hooks/useHeliodorNotes";
 import { useClipboardHandler } from "@/hooks/useClipboardHandler";
 import { useDeleteShortcut } from "@/hooks/useDeleteShortcut";
 import { useToast } from "@/hooks/useToast";
+import { useEffect } from "react";
 
 const Heliodor = () => {
   const { message, showToast, clearToast } = useToast();
@@ -30,6 +31,15 @@ const Heliodor = () => {
 
   useClipboardHandler(setNotes, getCenterPosition);
   useDeleteShortcut(activeNoteId, deleteNote, () => setActiveNoteId(null));
+
+  useEffect(() => {
+    const hasVisitedBefore = localStorage.getItem("heliodor_has_visited");
+
+    if (!hasVisitedBefore) {
+      addGuideNote();
+      localStorage.setItem("heliodor_has_visited", "true");
+    }
+  }, [addGuideNote]);
 
   return (
     <div className="w-full h-screen relative bg-slate-100 overflow-auto">

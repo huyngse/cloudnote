@@ -42,22 +42,6 @@ export const useHeliodorNotes = (
         localStorage.setItem(lockDecorStorageKey, JSON.stringify(lockDecor));
     }, [lockDecor]);
 
-    // const autoSaveNotes = async () => {
-    //     try {
-    //         for (const note of notes) {
-    //             await saveNote(toStoredNote(note));
-    //         }
-    //         console.log("auto-saved notes 🌿");
-    //     } catch (error) {
-    //         console.error("failed to auto-save notes (・・;)", error);
-    //     }
-    // };
-
-    // useEffect(() => {
-    //     const interval = setInterval(() => autoSaveNotes(), 1000 * 60 * 5);
-    //     return () => clearInterval(interval);
-    // }, [notes]);
-
     const addNote = () => {
         const newNote = createNote(getCenterPosition, {});
         setNotes((prev) => [...prev, newNote]);
@@ -104,6 +88,7 @@ export const useHeliodorNotes = (
 
     const deleteNote = (id: string) => {
         setNotes((prev) => prev.filter((note) => note.id !== id));
+        isEditingNoteRef.current = false;
         deleteNoteById(id);
     };
 
