@@ -47,10 +47,16 @@ export const NoteContent = ({
 
   return decorMode ? (
     <div
-      className="w-full h-[calc(100%-2rem)] overflow-auto p-2 prose prose-sm max-w-none"
+      className="w-full h-[calc(100%-2rem)] select-text relative"
       onDoubleClick={!lockDecor ? onDoubleClick : undefined}
-      dangerouslySetInnerHTML={{ __html: htmlContent }}
-    />
+      title={decorMode ? "Double click to toggle decor mode" : undefined}
+    >
+      <div className="absolute w-full h-full"></div>
+      <div
+        className="prose prose-sm max-w-none overflow-auto p-2"
+        dangerouslySetInnerHTML={{ __html: htmlContent }}
+      />
+    </div>
   ) : (
     <textarea
       readOnly={false}
