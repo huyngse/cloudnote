@@ -80,7 +80,7 @@ export const useCameraControls = () => {
     const scaleRef = useRef(scale);
     const panRef = useRef(pan);
 
-    const { isDraggingNoteRef, isRotatingNoteRef, isResizingNoteRef, isEditingNoteRef } = useEditorContext();
+    const { isDraggingNoteRef, isRotatingNoteRef, isResizingNoteRef } = useEditorContext();
 
     // Keep refs in sync
     useEffect(() => { scaleRef.current = scale }, [scale]);
@@ -94,17 +94,18 @@ export const useCameraControls = () => {
     // 🎯 Gesture bindings (mobile + desktop!)
     useGesture(
         {
-            onDrag: ({ delta: [dx, dy], pinching }) => {
-                // console.log('isDraggingNoteRef:', isDraggingNoteRef.current);
-                // console.log('isRotatingNoteRef:', isRotatingNoteRef.current);
-                // console.log('isResizingNoteRef:', isResizingNoteRef.current);
-                // console.log('isEditingNoteRef:', isEditingNoteRef.current);
-                // console.log('pinching:', pinching);
-                if (isDraggingNoteRef.current || isRotatingNoteRef.current || isResizingNoteRef.current || isEditingNoteRef.current || pinching) return;
-                if (!pinching) {
-                    setPan((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
-                    setCursorMode("panning");
-                }
+            onDrag: ({ delta: [dx, dy], pinching, event }) => {
+                const isDraggingCanvas = (event.target as HTMLElement).closest(".note") === null;
+                if (
+                    !isDraggingCanvas ||
+                    isDraggingNoteRef.current ||
+                    isRotatingNoteRef.current ||
+                    isResizingNoteRef.current ||
+                    pinching
+                ) return;
+
+                setPan((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+                setCursorMode("panning");
             },
             onPinch: ({ origin: [ox, oy], da: [_], offset: [scaleVal] }) => {
                 const container = containerRef.current;
