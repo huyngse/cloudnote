@@ -84,6 +84,9 @@ export const useHeliodorNotes = (
                     : note
             )
         );
+        if (updates.decorMode === true) {
+            setActiveNoteId(null);
+        }
     };
 
     const deleteNote = (id: string) => {

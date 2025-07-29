@@ -20,7 +20,7 @@ export type HeliodorNoteProps = {
   isActive?: boolean;
   lockDecor?: boolean;
   scale?: number;
-  onActivate?: (id: string) => void;
+  onActivate?: (id: string | null) => void;
   onUpdate?: (id: string, updates: Partial<HeliodorNoteProps>) => void;
   onDelete?: (id: string) => void;
   onZIndexChange?: (id: string, direction: "up" | "down") => void;

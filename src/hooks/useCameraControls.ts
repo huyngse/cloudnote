@@ -95,6 +95,11 @@ export const useCameraControls = () => {
     useGesture(
         {
             onDrag: ({ delta: [dx, dy], pinching }) => {
+                // console.log('isDraggingNoteRef:', isDraggingNoteRef.current);
+                // console.log('isRotatingNoteRef:', isRotatingNoteRef.current);
+                // console.log('isResizingNoteRef:', isResizingNoteRef.current);
+                // console.log('isEditingNoteRef:', isEditingNoteRef.current);
+                // console.log('pinching:', pinching);
                 if (isDraggingNoteRef.current || isRotatingNoteRef.current || isResizingNoteRef.current || isEditingNoteRef.current || pinching) return;
                 if (!pinching) {
                     setPan((prev) => ({ x: prev.x + dx, y: prev.y + dy }));

@@ -36,7 +36,7 @@ export function useNoteDrag(
         },
         {
             from: () => [dragPos.current.x * scale, dragPos.current.y * scale],
-            pointer: { touch: true }, // handles both touch and mouse! (*≧▽≦)
+            pointer: { touch: true }, 
         }
     );
 
