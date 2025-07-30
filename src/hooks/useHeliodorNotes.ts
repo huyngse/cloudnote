@@ -50,16 +50,16 @@ export const useHeliodorNotes = (
 
     const addGuideNote = () => {
         const guideContent = `
-        🌤️ welcome to cloudnote!
+        🌤️ Welcome to Cloudnote!
     
-        here's how to use this magical little space:
-        • drag: move around the canvas 🖱️
-        • scroll: zoom in & out 🔍
+        Here's how to use this magical little space:
+        • Drag: move around the canvas 🖱️
+        • Scroll: zoom in & out 🔍
         • ctrl/cmd + v: paste text or images from clipboard 📋
-        • double-click a note: toggle decor mode 🌸
-        • drag & resize notes, rotate them with the top handle 🔄
+        • Double-click a note: toggle decor mode 🌸
+        • Drag & resize notes, rotate them with the top handle 🔄
         
-        have fun and stay cozy ☁️💛
+        Have fun and stay cozy ☁️💛
     `.trim();
 
         const newNote = createNote(getCenterPosition, {
