@@ -32,6 +32,8 @@ export const useCameraControls = () => {
 
     const [cursorMode, setCursorMode] = useState<"default" | "panning" | "scaling">("default");
 
+    const { isDraggingNoteRef, isRotatingNoteRef, isResizingNoteRef } = useEditorContext();
+
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -39,6 +41,8 @@ export const useCameraControls = () => {
         if (!container) return;
 
         const handleWheel = (e: WheelEvent) => {
+            const isScrollingCanvas = (e.target as HTMLElement).closest(".note") === null;
+            if (!isScrollingCanvas) return;
             e.preventDefault();
             setCursorMode("scaling");
 
@@ -79,8 +83,6 @@ export const useCameraControls = () => {
 
     const scaleRef = useRef(scale);
     const panRef = useRef(pan);
-
-    const { isDraggingNoteRef, isRotatingNoteRef, isResizingNoteRef } = useEditorContext();
 
     // Keep refs in sync
     useEffect(() => { scaleRef.current = scale }, [scale]);
