@@ -11,9 +11,9 @@ export default defineConfig({
     registerType: 'autoUpdate',
     includeAssets: ['favicon.ico', 'cloudnote-favicon-32x32.png'], 
     manifest: {
-      name: 'cloudnote',
-      short_name: 'cloudnote',
-      description: 'a whimsical browser-based note board for text and images. drag, rotate, decorate, and never lose a thought again.',
+      name: 'Cloudnote',
+      short_name: 'Cloudnote',
+      description: 'A whimsical browser-based note board for text and images. drag, rotate, decorate, and never lose a thought again.',
       theme_color: '#f1f5f9',
       icons: [
         {
