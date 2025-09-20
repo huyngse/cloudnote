@@ -1,18 +1,13 @@
 import { EditorProvider } from "./contexts/EditorContext";
 import { useNavigation } from "./hooks/useNavigation";
 import { ToastProvider } from "./hooks/useToast";
-import Emerald from "./pages/Emerald";
-import Heliodor from "./pages/Heliodor";
+import Main from "./pages/Main";
 
 const App = () => {
   const { path } = useNavigation();
   return (
     <EditorProvider>
-      <ToastProvider>
-        {path === "/" && <Heliodor />}
-        {path === "/heliodor" && <Heliodor />}
-        {path === "/emerald" && <Emerald />}
-      </ToastProvider>
+      <ToastProvider>{path === "/" && <Main />}</ToastProvider>
     </EditorProvider>
   );
 };

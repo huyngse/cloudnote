@@ -5,7 +5,7 @@
 import { useEffect, type Dispatch, type SetStateAction } from "react";
 import { createNote, toStoredNote } from "@/utils/noteHelpers"; // Helper to create and convert notes!
 import { saveNote } from "@/utils/indexedDbUtils"; // For saving the note to IndexedDB (like a local camp log! ⛺📓)
-import { type HeliodorNoteProps } from "@/components/heliodor/HeliodorNote"; // Type for each note
+import { type HeliodorNoteProps } from "@/components/Note"; // Type for each note
 
 // This hook takes in a setter for notes and a function to get the center position on screen!
 export const useClipboardHandler = (

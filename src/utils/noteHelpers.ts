@@ -1,6 +1,6 @@
 // utils/noteHelpers.ts
 import { v4 as uuidv4 } from "uuid";
-import type { HeliodorNoteProps } from "../components/heliodor/HeliodorNote";
+import type { HeliodorNoteProps } from "../components/Note";
 import type { StoredNote } from "./indexedDbUtils";
 
 export const toStoredNote = (note: HeliodorNoteProps): StoredNote => {

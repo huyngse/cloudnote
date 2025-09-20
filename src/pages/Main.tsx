@@ -1,8 +1,8 @@
-import Note from "@/components/heliodor/HeliodorNote";
-import { HeliodorToolbar } from "@/components/heliodor/HeliodorToolbar";
+import Note from "@/components/Note";
+import { HeliodorToolbar } from "@/components/Toolbar";
 import Toast from "@/components/Toast";
 import { useCameraControls } from "@/hooks/useCameraControls";
-import { useHeliodorNotes } from "@/hooks/useHeliodorNotes";
+import { useHeliodorNotes } from "@/hooks/useNotes";
 import { useClipboardHandler } from "@/hooks/useClipboardHandler";
 import { useDeleteShortcut } from "@/hooks/useDeleteShortcut";
 import { useToast } from "@/hooks/useToast";
@@ -42,7 +42,7 @@ const Heliodor = () => {
   }, [addGuideNote]);
 
   return (
-    <div className="w-full h-screen relative bg-slate-100 overflow-auto">
+    <main className="w-full h-screen relative bg-slate-100 overflow-auto">
       {message && <Toast message={message} onClose={clearToast} />}
 
       {/* ☁️ toolbar */}
@@ -98,7 +98,7 @@ const Heliodor = () => {
           ))}
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 
