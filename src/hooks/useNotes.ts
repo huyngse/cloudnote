@@ -8,8 +8,7 @@ import {
 import { createNote, toStoredNote } from "@/utils/noteHelpers";
 import { type HeliodorNoteProps } from "@/components/Note";
 import { useEditorContext } from "@/contexts/EditorContext";
-
-const lockDecorStorageKey = "cloudnote-lock-decor";
+import { lockDecorStorageKey } from "@/constants/storageKeys";
 
 export const useNotes = (
     getCenterPosition: () => { x: number; y: number } | null,

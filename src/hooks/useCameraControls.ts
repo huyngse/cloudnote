@@ -2,8 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useGesture } from "@use-gesture/react";
 import { getCanvasCenter } from "../utils/canvasUtils";
 import { useEditorContext } from "@/contexts/EditorContext";
-
-const panZoomStorageKey = "cloudnote-pan-zoom";
+import { panZoomStorageKey } from "@/constants/storageKeys";
 
 export const useCameraControls = () => {
     const [pan, setPan] = useState<{ x: number; y: number }>(() => {

@@ -1,6 +1,6 @@
+import { settingsStorageKey } from "@/constants/storageKeys";
 import { createContext, useContext, useEffect, useState } from "react";
 
-const backgroundStorageKey = "cloudnote-settings";
 
 interface Settings {
   bgColor: string;
@@ -23,7 +23,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<Settings>(defaultSettings);
 
   useEffect(() => {
-    const saved = localStorage.getItem(backgroundStorageKey);
+    const saved = localStorage.getItem(settingsStorageKey);
     if (saved) {
       const parsed = JSON.parse(saved) as Settings;
       setSettings({ ...defaultSettings, ...parsed });
@@ -32,21 +32,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(backgroundStorageKey, JSON.stringify(settings));
+    localStorage.setItem(settingsStorageKey, JSON.stringify(settings));
     document.body.style.backgroundColor = settings.bgColor;
   }, [settings]);
-
-//   useEffect(() => {
-//     const handler = (e: StorageEvent) => {
-//       if (e.key === backgroundStorageKey && e.newValue) {
-//         const parsed = JSON.parse(e.newValue) as Settings;
-//         setSettings(parsed);
-//         document.body.style.backgroundColor = parsed.bgColor;
-//       }
-//     };
-//     window.addEventListener("storage", handler);
-//     return () => window.removeEventListener("storage", handler);
-//   }, []);
 
   const setSetting = <K extends keyof Settings>(key: K, value: Settings[K]) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
