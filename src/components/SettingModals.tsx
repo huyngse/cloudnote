@@ -1,4 +1,5 @@
 import { useSettings } from "@/contexts/SettingsContext";
+import { Button } from "./ui/button";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -26,12 +27,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
         </label>
 
         <div className="mt-6 flex justify-end space-x-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
-          >
-            Close
-          </button>
+          <Button onClick={onClose}>Close</Button>
         </div>
       </div>
     </div>

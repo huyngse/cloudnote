@@ -9,10 +9,10 @@ import { createNote, toStoredNote } from "@/utils/noteHelpers";
 import { type HeliodorNoteProps } from "@/components/Note";
 import { useEditorContext } from "@/contexts/EditorContext";
 import { lockDecorStorageKey } from "@/constants/storageKeys";
+import { toast } from "sonner";
 
 export const useNotes = (
     getCenterPosition: () => { x: number; y: number } | null,
-    showToast: (msg: string) => void
 ) => {
     const [notes, setNotes] = useState<HeliodorNoteProps[]>([]);
     const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
@@ -121,7 +121,7 @@ export const useNotes = (
 
             const index = updatedNotes.findIndex((n) => n.id === id);
             updatedNotes[index] = { ...targetNote, zIndex: newZ };
-            showToast(`☁️ moved to layer ${newZ}`);
+            toast.info(`☁️ moved to layer ${newZ}`, {id: "move-layer"});
 
             saveNote(toStoredNote(updatedNotes[index]));
             return updatedNotes;

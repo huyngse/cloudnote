@@ -1,9 +1,8 @@
-import { useToast } from "@/hooks/useToast";
 import { exportNotes, importNotesFromFile } from "@/utils/indexedDbUtils";
 import { useRef, useState } from "react";
 import SettingsModal from "./SettingModals";
+import { toast } from "sonner";
 
-// components/Toolbar.tsx
 interface ToolbarProps {
   addNote: () => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
@@ -20,14 +19,13 @@ const Toolbar = ({
   setLockDecor,
   addGuideNote,
 }: ToolbarProps) => {
-  const { showToast } = useToast();
   const importInputRef = useRef<HTMLInputElement>(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   const handleExport = () => {
     exportNotes()
-      .then(() => showToast("Notes exported successfully! 📤✨"))
-      .catch(() => showToast("Failed to export notes (；▽；)"));
+      .then(() => toast.success("Notes exported successfully! 📤✨"))
+      .catch(() => toast.error("Failed to export notes (；▽；)"));
   };
 
   const handleImportClick = () => {
@@ -42,10 +40,10 @@ const Toolbar = ({
 
     try {
       await importNotesFromFile(file);
-      showToast("Notes imported successfully! 📥💖");
+      toast.success("Notes imported successfully! 📥💖");
       window.location.reload();
     } catch (e) {
-      showToast("Failed to import notes! (っ °Д °;)っ");
+      toast.error("Failed to import notes! (っ °Д °;)っ");
     }
 
     // Reset the input so same file can be selected again if needed

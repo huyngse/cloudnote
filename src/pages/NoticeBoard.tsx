@@ -1,16 +1,13 @@
 import Note from "@/components/Note";
-import Toast from "@/components/shared/Toast";
 import { useCameraControls } from "@/hooks/useCameraControls";
 import { useNotes } from "@/hooks/useNotes";
 import { useClipboardHandler } from "@/hooks/useClipboardHandler";
 import { useDeleteShortcut } from "@/hooks/useDeleteShortcut";
-import { useToast } from "@/hooks/useToast";
 import { useEffect } from "react";
 import Toolbar from "@/components/Toolbar";
 import { useSettings } from "@/contexts/SettingsContext";
 
 const Heliodor = () => {
-  const { message, showToast, clearToast } = useToast();
   const { pan, scale, cursorMode, containerRef, getCenterPosition } =
     useCameraControls();
 
@@ -28,7 +25,7 @@ const Heliodor = () => {
     moveNoteZIndex,
     fileInputRef,
     handleImageUpload,
-  } = useNotes(getCenterPosition, showToast);
+  } = useNotes(getCenterPosition);
 
   const { settings } = useSettings();
 
@@ -49,8 +46,6 @@ const Heliodor = () => {
       className="w-full h-screen relative overflow-auto"
       style={{ backgroundColor: settings.bgColor }}
     >
-      {message && <Toast message={message} onClose={clearToast} />}
-
       {/* ☁️ toolbar */}
       <Toolbar
         addNote={addNote}
