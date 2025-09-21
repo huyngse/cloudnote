@@ -1,9 +1,10 @@
 import { useToast } from "@/hooks/useToast";
 import { exportNotes, importNotesFromFile } from "@/utils/indexedDbUtils";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import SettingsModal from "./SettingModals";
 
-// components/HeliodorToolbar.tsx
-interface HeliodorToolbarProps {
+// components/Toolbar.tsx
+interface ToolbarProps {
   addNote: () => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   handleImageUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -11,16 +12,17 @@ interface HeliodorToolbarProps {
   setLockDecor: React.Dispatch<React.SetStateAction<boolean>>;
   addGuideNote: () => void;
 }
-export const HeliodorToolbar = ({
+const Toolbar = ({
   addNote,
   fileInputRef,
   handleImageUpload,
   lockDecor,
   setLockDecor,
   addGuideNote,
-}: HeliodorToolbarProps) => {
+}: ToolbarProps) => {
   const { showToast } = useToast();
   const importInputRef = useRef<HTMLInputElement>(null);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   const handleExport = () => {
     exportNotes()
@@ -52,6 +54,10 @@ export const HeliodorToolbar = ({
 
   return (
     <div className="flex justify-end bottom-0 gap-3 fixed w-full z-[1000] p-3">
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+      />
       <input
         type="file"
         accept="image/*"
@@ -110,11 +116,14 @@ export const HeliodorToolbar = ({
         ❓
       </button>
       <button
-        className="bg-white shadow rounded-full p-2 text-sm hover:bg-gray-100 cursor-pointer duration-300 md:hidden"
-        title="↕️ Drag me if you stuck in fullscreen"
+        className="bg-white shadow rounded-full p-2 text-sm hover:bg-gray-100 cursor-pointer duration-300"
+        title="Settings"
+        onClick={() => setIsSettingsModalOpen(true)}
       >
-        ↕️
+        ⚙️
       </button>
     </div>
   );
 };
+
+export default Toolbar;

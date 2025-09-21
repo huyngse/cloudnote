@@ -1,4 +1,4 @@
-// hooks/useHeliodorNotes.ts
+// hooks/useNotes.ts
 import { useEffect, useRef, useState } from "react";
 import {
     getAllNotes,
@@ -11,7 +11,7 @@ import { useEditorContext } from "@/contexts/EditorContext";
 
 const lockDecorStorageKey = "cloudnote-lock-decor";
 
-export const useHeliodorNotes = (
+export const useNotes = (
     getCenterPosition: () => { x: number; y: number } | null,
     showToast: (msg: string) => void
 ) => {

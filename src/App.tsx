@@ -1,13 +1,16 @@
 import { EditorProvider } from "./contexts/EditorContext";
+import { SettingsProvider } from "./contexts/SettingsContext";
 import { useNavigation } from "./hooks/useNavigation";
 import { ToastProvider } from "./hooks/useToast";
-import Main from "./pages/Main";
+import NoticeBoard from "./pages/NoticeBoard";
 
 const App = () => {
   const { path } = useNavigation();
   return (
     <EditorProvider>
-      <ToastProvider>{path === "/" && <Main />}</ToastProvider>
+      <SettingsProvider>
+        <ToastProvider>{path === "/" && <NoticeBoard />}</ToastProvider>
+      </SettingsProvider>
     </EditorProvider>
   );
 };

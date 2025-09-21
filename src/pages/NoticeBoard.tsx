@@ -1,12 +1,13 @@
 import Note from "@/components/Note";
-import { HeliodorToolbar } from "@/components/Toolbar";
-import Toast from "@/components/Toast";
+import Toast from "@/components/shared/Toast";
 import { useCameraControls } from "@/hooks/useCameraControls";
-import { useHeliodorNotes } from "@/hooks/useNotes";
+import { useNotes } from "@/hooks/useNotes";
 import { useClipboardHandler } from "@/hooks/useClipboardHandler";
 import { useDeleteShortcut } from "@/hooks/useDeleteShortcut";
 import { useToast } from "@/hooks/useToast";
 import { useEffect } from "react";
+import Toolbar from "@/components/Toolbar";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const Heliodor = () => {
   const { message, showToast, clearToast } = useToast();
@@ -27,26 +28,31 @@ const Heliodor = () => {
     moveNoteZIndex,
     fileInputRef,
     handleImageUpload,
-  } = useHeliodorNotes(getCenterPosition, showToast);
+  } = useNotes(getCenterPosition, showToast);
+
+  const { settings } = useSettings();
 
   useClipboardHandler(setNotes, getCenterPosition);
   useDeleteShortcut(activeNoteId, deleteNote, () => setActiveNoteId(null));
 
   useEffect(() => {
-    const hasVisitedBefore = localStorage.getItem("heliodor_has_visited");
+    const hasVisitedBefore = localStorage.getItem("has_visited");
 
     if (!hasVisitedBefore) {
       addGuideNote();
-      localStorage.setItem("heliodor_has_visited", "true");
+      localStorage.setItem("has_visited", "true");
     }
   }, [addGuideNote]);
 
   return (
-    <main className="w-full h-screen relative bg-slate-100 overflow-auto">
+    <div
+      className="w-full h-screen relative overflow-auto"
+      style={{ backgroundColor: settings.bgColor }}
+    >
       {message && <Toast message={message} onClose={clearToast} />}
 
       {/* ☁️ toolbar */}
-      <HeliodorToolbar
+      <Toolbar
         addNote={addNote}
         fileInputRef={fileInputRef}
         handleImageUpload={handleImageUpload}
@@ -56,7 +62,7 @@ const Heliodor = () => {
       />
 
       {/* 🌤️ canvas area */}
-      <div
+      <main
         ref={containerRef}
         className={`
           w-full h-full overflow-hidden ${
@@ -97,8 +103,8 @@ const Heliodor = () => {
             />
           ))}
         </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 };
 
